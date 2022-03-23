@@ -1,8 +1,8 @@
 {
-  "templateMetadata": {
-    "templateUniqueName": "Employees4",
-    "templateDisplayName": "Employees (Template 4)",
-    "templateVersion": "1.0"
+  "templateMetadataERROR": {
+    "templateUniqueName": "EmployeesERROR!",
+    "templateDisplayNameERROR": "Employees (ERROR!)",
+    "templateVersion": "NONE"
   },
   "templateColumnData": [
     {
@@ -56,19 +56,27 @@
   ],
   "templateDisplayData": [
     {
-      "templateHeaderText": "Full Name (ID)",
-      "templateCellFormat": "${EmployeeLastName}, ${EmployeeFirstName} (${EmployeeInternalId})"
+      "templateHeaderText": "First name",
+      "templateCellFormat": "${EmployeeFirstName}"
     },
     {
-      "templateHeaderText": "Date of Birth",
+      "templateHeaderText": "Last name",
+      "templateCellFormat": "${EmployeeLastName}"
+    },
+    {
+      "templateHeaderText": "Date of birth",
       "templateCellFormat": "${EmployeeDOB}"
+    },
+    {
+      "templateHeaderText": "ID",
+      "templateCellFormat": "${EmployeeInternalId}"
     },
     {
       "templateHeaderText": "Department",
       "templateCellFormat": "${EmployeeDepartment}"
     },
     {
-      "templateHeaderText": "Company Car",
+      "templateHeaderText": "Company car",
       "templateCellFormat": "${EmployeeUsesCompanyCar}"
     }
   ]

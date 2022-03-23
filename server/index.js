@@ -36,37 +36,76 @@ app.get("/", (req, res) => {
   res.send("Backend says hi!");
 });
 
-// Get raw filelist from ./form_templates
+// Get raw .json-filelist from ./form_templates
 app.get("/templates/all/rawfilelist", (req, res) => {
-  let rawFilenameList = {};
-  fs.readdir(formTemplateDirectory, { withFileTypes: true }, (err, files) => {
-    //console.log("\nCreating raw filelist from 'form_templates'-directory:");
-    if (err) console.log("Error fetching raw filelist!", err);
-    else {
-      rawFilenameList = files;
-      //console.log("writing rawFilenameList...")
-      //console.log(rawFilenameList);
-      res.send(rawFilenameList);
-    }
-  });
-});
-
-// TODO
-// Get raw filelist from ./form_templates
-app.get("/templates/all/rawfilelist2", (req, res) => {
-  res.send(null);
+  fs.promises.readdir(formTemplateDirectory)
+    .then(filenames => {
+      let fileNameArray = [];
+      for (let filename of filenames) {
+        if (path.extname(filename) == ".json") {
+          fileNameArray.push(filename);
+        } else console.log(`File ignored: ${filename}`)
+      }
+      console.log(fileNameArray);
+      res.send(fileNameArray);
+    })
+    .catch(err => {
+        console.log(err)
+    })
 });
 
 // TODO
 // Get object with filelist and associated templateMetadata
 app.get("/templates/all/filelistobject", async (req, res) => {
-  res.send(null);
+  let pairObject = [];
+  fs.promises.readdir(formTemplateDirectory)
+    .then(filenames => {
+      for (let filename of filenames) {
+        if (path.extname(filename) == ".json") {
+          fs.promises.readFile(path.join(formTemplateDirectory, filename), 'utf-8')
+            .then(openfile => {
+              const parsedFile = JSON.parse(openfile);
+              if (parsedFile.hasOwnProperty("templateMetadata")) {
+                //console.log(parsedFile.templateMetadata)
+                if (parsedFile.templateMetadata.hasOwnProperty("templateDisplayName")) {
+                  //console.log(parsedFile.templateMetadata.templateDisplayName)
+                  const newPair = {
+                    "fname": filename,
+                    "dname": parsedFile.templateMetadata.templateDisplayName
+                  }
+                  pairObject.push(newPair)
+                  //console.log(JSON.stringify(newPair))
+                  console.log(pairObject.length)
+                  //console.log(JSON.stringify(pairObject))
+                }
+              }
+            })
+            .catch(err => {
+              console.log(err)
+            })
+            .finally(pairObject => {
+                console.log("finally 2")
+                console.log("nope")
+            })
+        } else console.log(`File ignored: ${filename}`)
+      }
+      console.log("something")
+    })
+    .then(() => {
+      console.log("then 2")
+    })
+    .catch(err => {
+        console.log(err)
+    })
+    .finally(pairObject => {
+      console.log("finally 1")
+    })
 });
 
 // Get all data
 app.get("/data/all", async (req, res) => {
   const allData = await pgClient.query("SELECT * FROM dataTable");
-  console.log(allData.rows)
+  //console.log(allData.rows)
   res.send(allData);
 });
 

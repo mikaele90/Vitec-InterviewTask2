@@ -7,7 +7,7 @@ const MainComponent = () => {
   const [dataPoint, setDataPoint] = useState("");
   const [ownerTemplate, setOwnerTemplate] = useState("");
 
-  const [rawFilelist, setRawFilelist] = useState([]);
+  const [rawFileNameArray, setRawFileNameArray] = useState([]);
   const [fileListObject, setFileListObject] = useState([]);
 
   const getAllData = useCallback(async () => {
@@ -18,10 +18,10 @@ const MainComponent = () => {
     setAllData(allData.data.rows);
   }, []);
 
-  const getRawFilelist = useCallback(async () => {
-    const fetchedList = await axios.get("/api/templates/all/rawfilelist2");
-    console.log(fetchedList);
-    setRawFilelist(fetchedList);
+  const getRawFileNames = useCallback(async () => {
+    const rawFileNamesObject = await axios.get("/api/templates/all/rawfilelist");
+    console.log(rawFileNamesObject.data);
+    setRawFileNameArray(rawFileNamesObject.data);
   }, []);
 
   const getFilelistObject = useCallback(async () => {
@@ -52,8 +52,8 @@ const MainComponent = () => {
 
   useEffect(() => {
     getAllData();
-    getRawFilelist();
-    //getFilelistObject();
+    getRawFileNames();
+    getFilelistObject();
   }, []);
 
   return (
