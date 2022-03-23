@@ -1,4 +1,3 @@
-version: "3"
 services:
   postgres:
     image: "postgres:latest"
@@ -37,3 +36,13 @@ services:
     volumes:
       - /app/node_modules
       - ./client:/app
+  pgadmin:
+    image: dpage/pgadmin4
+    environment: 
+      PGADMIN_DEFAULT_PASSWORD: pgadmin4_pw
+      PGADMIN_DEFAULT_EMAIL: pg@pgadmin.com
+      PGADMIN_LISTEN_PORT: 9090
+    ports:
+      - 9090:9090
+    depends_on: 
+      - postgres
