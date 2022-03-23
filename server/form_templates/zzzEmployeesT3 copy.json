@@ -1,0 +1,79 @@
+{
+  "templateMetadata": {
+    "templateUniqueName": "Employees3",
+    "templateDisplayName": "Employees (Template 3)",
+    "templateVersion": "1.0"
+  },
+  "templateColumnData": [
+    {
+      "ColUniqueName": "EmployeeFirstName",
+      "ColStandaloneDisplayName": "First name",
+      "ColDataType": "TEXT",
+      "ColDataMinValue": 1,
+      "ColDataMaxValue": 50,
+      "ColPredefinedChoiceValues": []
+    },
+    {
+      "ColUniqueName": "EmployeeLastName",
+      "ColStandaloneDisplayName": "Last name",
+      "ColDataType": "TEXT",
+      "ColDataMinValue": 1,
+      "ColDataMaxValue": 50,
+      "ColPredefinedChoiceValues": []
+    },
+    {
+      "ColUniqueName": "EmployeeDOB",
+      "ColStandaloneDisplayName": "Date of birth",
+      "ColDataType": "DATEONLY",
+      "ColDataMinValue": "01.01.1900",
+      "ColDataMaxValue": "01.01.2022",
+      "ColPredefinedChoiceValues": []
+    },
+    {
+      "ColUniqueName": "EmployeeInternalId",
+      "ColStandaloneDisplayName": "ID",
+      "ColDataType": "NUMBER",
+      "ColDataMinValue": 10000,
+      "ColDataMaxValue": 99999,
+      "ColPredefinedChoiceValues": []
+    },
+    {
+      "ColUniqueName": "EmployeeDepartment",
+      "ColStandaloneDisplayName": "Department",
+      "ColDataType": "PREDEFINED_CHOICE",
+      "ColDataMinValue": 0,
+      "ColDataMaxValue": 1,
+      "ColPredefinedChoiceValues": ["R&D", "Sales", "Marketing", "Management"]
+    },
+    {
+      "ColUniqueName": "EmployeeUsesCompanyCar",
+      "ColStandaloneDisplayName": "Company car",
+      "ColDataType": "BOOLEAN",
+      "ColDataMinValue": false,
+      "ColDataMaxValue": true,
+      "ColPredefinedChoiceValues": []
+    }
+  ],
+  "templateDisplayData": [
+    {
+      "templateHeaderText": "Full name",
+      "templateCellFormat": "${EmployeeFirstName} ${EmployeeLastName}"
+    },
+    {
+      "templateHeaderText": "Date of birth",
+      "templateCellFormat": "${EmployeeDOB}"
+    },
+    {
+      "templateHeaderText": "ID",
+      "templateCellFormat": "${EmployeeInternalId}"
+    },
+    {
+      "templateHeaderText": "Department",
+      "templateCellFormat": "${EmployeeDepartment}"
+    },
+    {
+      "templateHeaderText": "Company car",
+      "templateCellFormat": "${EmployeeUsesCompanyCar}"
+    }
+  ]
+}
