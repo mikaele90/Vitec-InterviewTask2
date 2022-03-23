@@ -2,7 +2,7 @@ const keys = require("./keys");
 
 // Express Application setup
 const express = require("express");
-const bodyParser = require("body-parser");
+//const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const fs = require("fs");
@@ -11,7 +11,9 @@ const formTemplateDirectory = path.join(__dirname, "form_templates");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
+app.use(express.json()) // for parsing application/json
+app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
 // Postgres client setup
 const { Pool } = require("pg");
