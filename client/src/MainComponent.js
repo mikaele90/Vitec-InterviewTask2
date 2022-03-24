@@ -1,14 +1,26 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "./MainComponent.css";
 
 const MainComponent = () => {
+  const renderCount = useRef(0);
+
+  useEffect(() => {
+    renderCount.current = renderCount.current + 1;
+    console.log(`Render counter: ${renderCount.current}`)
+  });
+
   const [allData, setAllData] = useState([]);
   const [dataPoint, setDataPoint] = useState("");
   const [ownerTemplate, setOwnerTemplate] = useState("");
 
   const [rawFileNameArray, setRawFileNameArray] = useState([]);
-  const [fileListObject, setFileListObject] = useState([]);
+  const [fileListPairArray, setFileListPairArray] = useState([]);
+
+  const [selectedForm, setSelectedForm] = useState("")
+  const [selectedFormJSON, setSelectedFormJSON] = useState("")
+
+  const [showTable, setShowTable] = useState(false)
 
   const getAllData = useCallback(async () => {
     const allData = await axios.get("/api/data/all");
@@ -19,16 +31,49 @@ const MainComponent = () => {
   }, []);
 
   const getRawFileNames = useCallback(async () => {
-    const rawFileNamesObject = await axios.get("/api/templates/all/rawfilelist");
-    console.log(rawFileNamesObject.data);
-    setRawFileNameArray(rawFileNamesObject.data);
+    const fetchedRawFileNamesObject = await axios.get("/api/templates/all/rawfilelist");
+    //console.log(fetchedRawFileNamesObject.data);
+    setRawFileNameArray(fetchedRawFileNamesObject.data);
   }, []);
 
   const getFilelistObject = useCallback(async () => {
-    const fetchedList = await axios.get("/api/templates/all/filelistobject");
-    console.log(fetchedList);
-    setFileListObject(fetchedList);
+    const fetchedFileListObject = await axios.get("/api/templates/all/filelistobject");
+    console.log(fetchedFileListObject.data);
+    let sortedFileListObject = fetchedFileListObject.data.sort((a, b) => {
+      let displayNameA = a.dname.toLowerCase();
+      let displayNameB = b.dname.toLowerCase();
+      if (displayNameA < displayNameB) {
+          return -1;
+      }
+      if (displayNameA > displayNameB) {
+          return 1;
+      }
+      else return 0;
+    });
+    setFileListPairArray(sortedFileListObject);
   }, []);
+
+  const getFormTemplateFile = useCallback(async () => {
+    await axios.get(`/api/templates/${selectedForm}`)
+      .then(response => {
+        console.log(response)
+        setSelectedFormJSON(response.data)
+      })
+      .then(response => {
+        //console.log(selectedFormJSON)
+      })
+      .catch(err => {
+        console.log("Error occured during fetch. ", err)
+      })
+  }, [selectedForm]);
+
+  const handleChangeSelectedFormTemplate = (event) => {
+    event.preventDefault();
+    const selectedFormFileName = event.target.value;
+    setSelectedForm(selectedFormFileName)
+    console.log("Form template changed to: " + selectedFormFileName)
+    console.log("Form template changed to: " + selectedForm)
+  };
 
   const saveDataPoint = useCallback(async event => {
       event.preventDefault();
@@ -46,15 +91,23 @@ const MainComponent = () => {
 
       setDataPoint("");
       getAllData();
-    },
-    [dataPoint, getAllData]
-  );
+  }, [dataPoint, ownerTemplate, getAllData]);
 
   useEffect(() => {
     getAllData();
+  }, [getAllData]);
+
+  useEffect(() => {
     getRawFileNames();
+  }, [getRawFileNames]);
+
+  useEffect(() => {
     getFilelistObject();
-  }, []);
+  }, [getFilelistObject]);
+
+  useEffect(() => {
+    getFormTemplateFile();
+  }, [getFormTemplateFile])
 
   return (
     <div>
@@ -63,8 +116,8 @@ const MainComponent = () => {
       <span className="title">All data</span>
 
       <div className="allData">
-        {console.log("Logging allData inside return:")}
-        {console.log(allData)}
+        {/*console.log("Logging allData inside return:")*/}
+        {/*console.log(allData)*/}
         {allData.map((dataRow) => (
           <div className="dataRow" key={dataRow.id}>{dataRow.data.data}</div>
         ))}
@@ -81,6 +134,21 @@ const MainComponent = () => {
         />
         <button>Submit data</button>
       </form>
+      <br />
+      
+      <br />
+      <br />
+      <form name="form-select_template">
+        <select name="select-form_templates" defaultValue={"Select template..."} onChange={handleChangeSelectedFormTemplate}>
+          {/*console.log(fileListPairArray)*/}
+          <option value="Select template..." disabled hidden>Select template...</option>
+          {fileListPairArray.map((dataRow) => (
+            <option value={dataRow.fname} key={dataRow.fname}>{dataRow.dname}</option>
+          ))}
+        </select>
+      </form>
+      <p>{ selectedForm }</p>
+      <p>{ JSON.stringify(selectedFormJSON) }</p>
     </div>
   );
 };

@@ -61,54 +61,41 @@ app.get("/templates/all/filelistobject", (req, res) => {
 
   fs.promises.readdir(formTemplateDirectory)
     .then(filenames => {
+      if (filenames.length === 0) res.send(pairObject)
+      if (fileNamesLength === undefined) {
+        fileNamesLength = filenames.length;
+      }
       for (let filename of filenames) {
-        if (fileNamesLength === undefined) {
-          fileNamesLength = filenames.length;
-        }
         if (path.extname(filename) == ".json") {
           fs.promises.readFile(path.join(formTemplateDirectory, filename), 'utf-8')
             .then(openfile => {
               let parsedFile;
               try {
                 parsedFile = JSON.parse(openfile);
+                //parsedFile.hasOwnProperty("templateMetadata")
+                parsedFile.templateMetadata.hasOwnProperty("templateDisplayName")
               } catch (e) {
                 fileNamesLength--;
-                console.log("Error: JSON not parsed!", e)
+                console.log(`Error: Problem during JSON-parsing of file: ${filename} || fileNamesLength: ${fileNamesLength} || `, e.message);
                 if (pairObject.length == fileNamesLength) {
+                  console.log("Sending from catch block...")
                   res.send(pairObject)
                 }
+                else return;
               }
-              if (!parsedFile.hasOwnProperty("templateMetadata")) {
-                fileNamesLength--;
-                console.log("In catch block: " + fileNamesLength)
-                if (pairObject.length == fileNamesLength) {
-                  res.send(pairObject)
-                }
-                //console.log(parsedFile.templateMetadata)
+              //console.log(parsedFile.templateMetadata.templateDisplayName)
+              const newPair = {
+                "fname": filename,
+                "dname": parsedFile.templateMetadata.templateDisplayName
               }
-              else {
-                if (!parsedFile.templateMetadata.hasOwnProperty("templateDisplayName")) {
-                  fileNamesLength--;
-                  console.log("In catch block: " + fileNamesLength)
-                  if (pairObject.length == fileNamesLength) {
-                    res.send(pairObject)
-                  }
-                }
-                else {
-                  //console.log(parsedFile.templateMetadata.templateDisplayName)
-                  const newPair = {
-                    "fname": filename,
-                    "dname": parsedFile.templateMetadata.templateDisplayName
-                  }
-                  pairObject.push(newPair)
-                  //console.log(JSON.stringify(newPair))
-                  console.log("PairObject length: " + pairObject.length)
-                  //console.log(JSON.stringify(pairObject))
-                  console.log("FileNamesLength: " + fileNamesLength)
-                  if (pairObject.length == fileNamesLength) {
-                    res.send(pairObject)
-                  }
-                }
+              pairObject.push(newPair)
+              console.log(`Adding newPair to pairObject: ${JSON.stringify(newPair)}`)
+              console.log("PairObject length: " + pairObject.length)
+              //console.log(JSON.stringify(pairObject))
+              console.log("FileNamesLength: " + fileNamesLength)
+              if (pairObject.length == fileNamesLength) {
+                console.log("Sending from error-free block...")
+                res.send(pairObject)
               }
             })
             .catch(err => {
@@ -116,16 +103,31 @@ app.get("/templates/all/filelistobject", (req, res) => {
             })
         } else {
           fileNamesLength--;
-          console.log("In catch block: " + fileNamesLength)
-          console.log(`File ignored: ${filename}`)
+          console.log(`File ignored due to incorrect file-extension: ${filename} || fileNamesLength: ${fileNamesLength}`)
+          if (pairObject.length == fileNamesLength) {
+            console.log("Sending from file-ignored block...")
+            res.send(pairObject)
+          }
         }
       }
     })
-    .then(pairObject => {
-      setTimeout(() => {res.send(pairObject)}, 1000);
+    .catch(err => {
+      res.send(pairObject);
+      console.log(err);
+    })
+});
+
+// Get form template JSON for one template
+app.get("/templates/:fileName", (req, res) => {
+  console.log(`Requesting file: ${req.params.fileName}`)
+  fs.promises.readFile(path.join(formTemplateDirectory, req.params.fileName), 'utf-8')
+    .then(file => {
+      console
+      res.send(file)
     })
     .catch(err => {
-        console.log(err)
+      res.send("")
+      console.log("File not sent...", err)
     })
 });
 
