@@ -20,7 +20,9 @@ const MainComponent = () => {
   const [selectedForm, setSelectedForm] = useState("")
   const [selectedFormJSON, setSelectedFormJSON] = useState("")
 
-  const [showTable, setShowTable] = useState(false)
+  const [showTable, setShowTable] = useState(false);
+  const [showAddData, setShowAddData] = useState(false);
+  const [showEditData, setShowEditData] = useState(false);
 
   const getAllData = useCallback(async () => {
     const allData = await axios.get("/api/data/all");
@@ -54,26 +56,45 @@ const MainComponent = () => {
   }, []);
 
   const getFormTemplateFile = useCallback(async () => {
+    if (selectedForm === "") return
     await axios.get(`/api/templates/${selectedForm}`)
       .then(response => {
         console.log(response)
         setSelectedFormJSON(response.data)
-      })
-      .then(response => {
-        //console.log(selectedFormJSON)
       })
       .catch(err => {
         console.log("Error occured during fetch. ", err)
       })
   }, [selectedForm]);
 
+  const handleSelectedFormJSONChanged = useCallback(() => {
+    console.log("selectedFormJSON changed. ", selectedFormJSON)
+    if (selectedFormJSON !== "") setShowTable(true);
+  }, [selectedFormJSON])
+
   const handleChangeSelectedFormTemplate = (event) => {
     event.preventDefault();
     const selectedFormFileName = event.target.value;
     setSelectedForm(selectedFormFileName)
     console.log("Form template changed to: " + selectedFormFileName)
-    console.log("Form template changed to: " + selectedForm)
   };
+
+  const handleAddDataClicked = (event) => {
+    event.preventDefault();
+    if (!showAddData) setShowAddData(true);
+  }
+
+  const handleAddDataSave = (event) => {
+    event.preventDefault();
+    console.log("save clicked");
+    if (showAddData) setShowAddData(false);
+  }
+
+  const handleAddDataCancel = (event) => {
+    event.preventDefault();
+    console.log("cancel clicked")
+    if (showAddData) setShowAddData(false);
+  }
 
   const saveDataPoint = useCallback(async event => {
       event.preventDefault();
@@ -107,7 +128,68 @@ const MainComponent = () => {
 
   useEffect(() => {
     getFormTemplateFile();
-  }, [getFormTemplateFile])
+  }, [getFormTemplateFile]);
+
+  useEffect(() => {
+    handleSelectedFormJSONChanged();
+  }, [handleSelectedFormJSONChanged]);
+
+  const tableView = () => {
+    if (showTable) {
+      const metadata = selectedFormJSON.templateMetadata;
+      console.log(`JSON Metadata: `, metadata)
+      const columnData = selectedFormJSON.templateColumnData;
+      console.log(`JSON ColumnData: `, columnData);
+      const displayData = selectedFormJSON.templateDisplayData;
+      console.log(`JSON DisplayData: `, displayData);
+      const thGen = () => {
+        return columnData.map((row)=>{
+          return <th key={row.ColUniqueName}>{row.ColStandaloneDisplayName}</th>
+        })
+      }
+      const tdGen = () => {
+
+      }
+      return (
+        <div name="div-table_view">
+          <table name="dynamic-table" id={metadata.templateDisplayName} key={metadata.templateUniqueName}>
+            <thead>
+            <tr>{thGen()}</tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    else return <div><p>Select a form template to work with...</p></div>
+  }
+
+  const addDataView = () => {
+    if (!showTable) return <div className="empty_div"></div>
+    if (showAddData) {
+      return (
+        <div name="div-add_data_open">
+          <form className="form" onSubmit={saveDataPoint}>
+            <label>Enter your data: </label>
+            <input
+              value={dataPoint}
+              onChange={event => {
+                setDataPoint(event.target.value);
+                setOwnerTemplate("test1");
+              }}
+            />
+            <button>Submit data</button>
+            <button onClick={handleAddDataCancel}>Cancel</button>
+          </form>
+        </div>
+      );
+    }
+    else {
+      return <div name="div-add_data_closed"><button name="button-add_data" onClick={handleAddDataClicked}>Add data</button></div>
+    }
+  }
 
   return (
     <div>
@@ -123,17 +205,7 @@ const MainComponent = () => {
         ))}
       </div>
 
-      <form className="form" onSubmit={saveDataPoint}>
-        <label>Enter your data: </label>
-        <input
-          value={dataPoint}
-          onChange={event => {
-            setDataPoint(event.target.value);
-            setOwnerTemplate("test1");
-          }}
-        />
-        <button>Submit data</button>
-      </form>
+      
       <br />
       
       <br />
@@ -147,8 +219,11 @@ const MainComponent = () => {
           ))}
         </select>
       </form>
-      <p>{ selectedForm }</p>
+      
+      <p>Selected file: { (selectedForm === "") ? "None" : selectedForm }</p>
       <p>{ JSON.stringify(selectedFormJSON) }</p>
+      {tableView()}
+      {addDataView()}
     </div>
   );
 };
