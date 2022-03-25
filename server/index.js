@@ -157,8 +157,8 @@ app.post("/data", async (req, res) => {
   pgClient
     .query("INSERT INTO dataTable(belongs_to_template, data) VALUES($1, $2)", [req.body.ownerTemplate, req.body.datas])
     .catch(err => console.log("Saving into db failed...", err));
+  res.send
   console.log("Data saved successfully!")
-  res.send();
 });
 
 app.listen(5000, err => {

@@ -1,6 +1,8 @@
 .header {
-  background: #eee;
-  margin-bottom: 10px;
+  background: rgb(202, 202, 202);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  padding-top: 2px;
 }
 
 .headerTopDiv {

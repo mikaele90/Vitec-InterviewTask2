@@ -6,7 +6,7 @@ const MainComponent = () => {
   // Render counter for keeping renders in check
   const renderCount = useRef(0);
   useEffect(() => {
-    renderCount.current = renderCount.current + 1;
+    renderCount.current++;
     console.log(`Render counter: ${renderCount.current}`)
   });
 
@@ -33,7 +33,7 @@ const MainComponent = () => {
 
   const getAllData = useCallback(async () => {
     const allDataFetch = await axios.get("/api/data/all");
-    console.log("Logging inside getAllData: ", allDataFetch);
+    //console.log("Logging inside getAllData: ", allDataFetch);
     //console.log(allData.data.rows);
     //setAllData(allData.data.rows.map(row => row.data));
     setAllData(allDataFetch.data.rows);
@@ -43,7 +43,7 @@ const MainComponent = () => {
     if (selectedForm === "") return
     await axios.get(`/api/formdata/${selectedForm}`)
       .then(response => {
-        console.log("getAllDataForForm res: ", response);
+        //console.log("getAllDataForForm res: ", response);
         setAllDataForForm(response.data.rows);
       })
       .catch(err => {
@@ -72,7 +72,7 @@ const MainComponent = () => {
     if (selectedForm === "") return
     await axios.get(`/api/templates/${selectedForm}`)
       .then(response => {
-        console.log("getFormTemplateFile res: ", response)
+        //console.log("getFormTemplateFile res: ", response)
         setSelectedFormJSON(response.data)
         setOwnerTemplate(selectedForm)
       })
@@ -112,14 +112,14 @@ const MainComponent = () => {
 
   const handleChangedAddDataInput = (event, index) => {
     event.preventDefault();
-    console.log(`input changed at ${index}, target.value: ` , event.target.value)
-    console.log(`input changed at ${index}, target.name: `, event.target.name)
+    //console.log(`input changed at ${index}, target.value: ` , event.target.value)
+    //console.log(`input changed at ${index}, target.name: `, event.target.name)
     let workingData = [...addDataInputFields.data];
     workingData[index][event.target.name] = event.target.value;
-    console.log("workingData: ", workingData)
+    //console.log("workingData: ", workingData)
     let obj = {"ownerTemplate": ownerTemplate, "data": workingData}
     setAddDataInputFields(obj)
-    console.log("addDataInputFields: ", addDataInputFields)
+    //console.log("addDataInputFields: ", addDataInputFields)
   };
 
   const handleAddDataClicked = (event) => {
@@ -128,9 +128,21 @@ const MainComponent = () => {
     if (!showAddData) setShowAddData(true);
   };
 
+  const handleEditDataButtonClicked = (event) => {
+    event.preventDefault();
+    console.log("Edit clicked on ", event.target)
+    if (!showAddData && !showEditData) setShowEditData(true);
+  };
+
+  const handleDeleteDataButtonClicked = (event) => {
+    event.preventDefault();
+    console.log("Delete clicked on ", event.target)
+    if (!showAddData && !showEditData) console.log("Replace this with alert!");
+  };
+
   const handleAddDataSave = useCallback(async (event) => {
     event.preventDefault();
-    console.log("Saving... ", addDataInputFields)
+    console.log("Saving new data... ", addDataInputFields)
     let jsonWrapper = {}
     jsonWrapper.data = addDataInputFields.data
     await axios.post("/api/data", {
@@ -138,15 +150,40 @@ const MainComponent = () => {
       datas: jsonWrapper
     });
     if (showAddData) setShowAddData(false)
-  }, [addDataInputFields, showAddData]);
+    getAllDataForForm();
+  }, [addDataInputFields, showAddData, getAllDataForForm]);
+
+  const handleEditDataSave = useCallback(async (event) => {
+    event.preventDefault();
+    console.log("Save edits...")
+    // Do stuff
+    if (showEditData) setShowEditData(false);
+    getAllDataForForm();
+  }, [showEditData, getAllDataForForm]);
+
+  const handleDeleteConfirm = useCallback(async (event) => {
+    event.preventDefault();
+    console.log("Deletion of data confirmed...")
+  }, []);
 
   const handleAddDataCancel = (event) => {
     event.preventDefault();
-    console.log("cancel clicked");
+    console.log("Adding new data cancelled");
     handleCreateInputFields();
     if (showAddData) setShowAddData(false);
   };
 
+  const handleEditDataCancel = (event) => {
+    event.preventDefault();
+    console.log("Editing cancelled...");
+    if (showEditData) setShowEditData(false);
+  };
+
+  const handleDeleteCancel = (event) => {
+    event.preventDefault();
+    console.log("Deletion cancelled...")
+  }
+  
   useEffect(() => {
     getAllData();
   }, [getAllData]);
@@ -179,30 +216,76 @@ const MainComponent = () => {
 
       const thGen = () => {
         return columnTemplateData.map((row) => {
-          return <th key={row.ColUniqueName}>{row.ColStandaloneDisplayName}</th>
+          return (
+            <th key={row.ColUniqueName}>
+              {row.ColStandaloneDisplayName}
+            </th>
+          );
         })
+      }
+
+      const thGenB = () => {
+        return (
+          <React.Fragment key="buttonHeaderKey">
+            <th key="editButtonHeader">Edit</th>
+            <th key="deleteButtonHeader">Delete</th>
+          </React.Fragment>
+        );
       }
 
       const trGen = () => {
         return allDataForForm.map((row, index) => {
-          return <tr key={index}>{tdGen(row.data.data)}</tr>
+          return (
+            <tr key={index}>
+              {tdGen(row.data.data)}
+              {tdGenB(row.id)}
+            </tr>
+          );
         })
       }
 
       const tdGen = (dataArray) => {
-        console.log(dataArray)
+        //console.log(dataArray)
         return dataArray.map((dataPair, idx) => {
-          console.log(dataPair, idx)
-          console.log(dataPair[Object.keys(dataPair)[0]])
+          //console.log(dataPair, idx)
+          //console.log(dataPair[Object.keys(dataPair)[0]])
           return <td key={Object.keys(dataPair)[0]}>{dataPair[Object.keys(dataPair)[0]]}</td>
         })
+      }
+
+      const tdGenB = (id) => {
+        return (
+          <React.Fragment key="buttonCells">
+            <td value={id} name="cell-edit_button" key="editButtonCell">
+              <button 
+                name="button-edit"
+                value={id}
+                onClick={handleEditDataButtonClicked}
+              >
+                  Edit
+              </button>
+            </td>
+            <td value={id} name="cell-delete_button" key="deleteButtonCell">
+              <button 
+                name="button-delete"
+                value={id}
+                onClick={handleDeleteDataButtonClicked}
+              >
+                Delete
+              </button>
+            </td>
+          </React.Fragment>
+        );
       }
 
       return (
         <div name="div-table_view">
           <table name="dynamic-table" id={templateMetadata.templateDisplayName} key={templateMetadata.templateUniqueName}>
             <thead>
-              <tr>{thGen()}</tr>
+              <tr>
+                {thGen()}
+                {thGenB()}
+              </tr>
             </thead>
             <tbody>
               {trGen()}
@@ -215,11 +298,11 @@ const MainComponent = () => {
   }
 
   const addDataCreateInputFields = () => {
-    console.log(`JSON Metadata: `, templateMetadata)
-    console.log(`JSON ColumnData: `, columnTemplateData);
-    console.log(`JSON DisplayData: `, columnDisplayData);
-    console.log(`addDataInputFields: `, addDataInputFields)
-    console.log(`addDataInputFields.data: `, addDataInputFields.data)
+    //console.log(`JSON Metadata: `, templateMetadata)
+    //console.log(`JSON ColumnData: `, columnTemplateData);
+    //console.log(`JSON DisplayData: `, columnDisplayData);
+    //console.log(`addDataInputFields: `, addDataInputFields)
+    //console.log(`addDataInputFields.data: `, addDataInputFields.data)
     return (
         columnTemplateData.map((colRow, index) => {
           return (
@@ -256,16 +339,23 @@ const MainComponent = () => {
       );
     }
     else {
-      return <div name="div-add_data_closed"><br/><button name="button-add_data" onClick={handleAddDataClicked}>Add data</button><br/></div>
+      return (
+        <div name="div-add_data_closed">
+          <br/>
+          <button name="button-add_data" onClick={handleAddDataClicked}>
+            Add data
+          </button>
+          <br/>
+        </div>
+      );
     }
   }
 
   return (
     <div>
       <br />
-      <span className="title">Template Editor</span>
-      <br />
-      <br />
+      <span className="title">Templates</span>
+      <br /><br />
 
       <form name="form-select_template">
         <select name="select-form_templates" defaultValue={"Select template..."} onChange={handleChangeSelectedFormTemplate}>
@@ -286,5 +376,3 @@ const MainComponent = () => {
 };
 
 export default MainComponent;
-
-

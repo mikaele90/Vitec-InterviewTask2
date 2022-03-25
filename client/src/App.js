@@ -1,21 +1,21 @@
 import { Fragment } from "react";
 import "./App.css";
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
-import OtherPage from "./OtherPage";
-import MainComponent from "./MainComponent";
+import MainComponent from "./components/MainComponent";
+import UploadPage from "./components/UploadPage";
 
 function App() {
   return (
     <Router>
-      <Fragment>
+      <Fragment className="fragment-main">
         <header className="header">
           <div className="headerTopDiv">Vitec Interview Task App</div>
-          <Link to="/">Home</Link>
-          <Link to="/otherpage">Placeholder</Link>
+          <Link to="/">Templates</Link>
+          <Link to="/upload">Upload</Link>
         </header>
         <div className="main">
           <Route exact path="/" component={MainComponent} />
-          <Route path="/otherpage" component={OtherPage} />
+          <Route path="/upload" component={UploadPage} />
         </div>
       </Fragment>
     </Router>
