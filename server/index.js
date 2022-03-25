@@ -138,22 +138,29 @@ app.get("/data/all", async (req, res) => {
   res.send(allData);
 });
 
+// Get all data for specific form
+app.get("/formdata/:fileHandle", async(req, res) => {
+  console.log(`Requesting data for file: ${req.params.fileHandle}`);
+  pgClient
+    .query("SELECT * FROM dataTable WHERE belongs_to_template = $1", [req.params.fileHandle])
+    .then(response => res.send(response))
+    .catch(err => console.log(`Fetching data for ${req.params.fileHandle} failed. `, err))
+  console.log("Just logging in case...")
+})
+
 // Post new data
 app.post("/data", async (req, res) => {
-  console.log("Logging:")
+  console.log("Logging req.body:")
   console.log(req.body)
-  console.log(req.body.dataPoint.data)
-  console.log(req.body.ownerTemplate)
-
-  if (!req.body.dataPoint.data) res.send({ working: false });
+  if (!req.body.data) res.send({ working: false });
   console.log("Saving into db...")
   pgClient
-    .query("INSERT INTO dataTable(data, belongs_to_template) VALUES($1, $2)", [req.body.dataPoint, req.body.ownerTemplate])
+    .query("INSERT INTO dataTable(belongs_to_template, data) VALUES($1, $2)", [req.body.ownerTemplate, req.body.datas])
     .catch(err => console.log("Saving into db failed...", err));
   console.log("Data saved successfully!")
-  res.send({ working: true });
+  res.send();
 });
 
 app.listen(5000, err => {
-  console.log("Listening");
+  console.log("Listening...");
 });
