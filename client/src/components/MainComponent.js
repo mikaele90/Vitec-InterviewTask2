@@ -27,6 +27,9 @@ const MainComponent = () => {
   const [addDataInputFields, setAddDataInputFields] = useState();
   const [ownerTemplate, setOwnerTemplate] = useState("");
 
+  const [editDataInputFields, setEditDataInputFields] = useState();
+  const [currentEditData, setCurrentEditData] = useState("");
+
   const [showTable, setShowTable] = useState(false);
   const [showAddData, setShowAddData] = useState(false);
   const [showEditData, setShowEditData] = useState(false);
@@ -88,11 +91,13 @@ const MainComponent = () => {
       setColumnTemplateData(selectedFormJSON.templateColumnData);
       setColumnDisplayData(selectedFormJSON.templateDisplayData);
       setShowTable(true);
+      setShowAddData(false);
+      setShowEditData(false);
     }
   }, [selectedFormJSON])
 
   const handleCreateInputFields = useCallback(() => {
-    if (selectedFormJSON === "") return
+    if (selectedFormJSON === "") return;
     const colTD = selectedFormJSON.templateColumnData;
     console.log("Creating input fields from ", colTD);
     let inputFields = { ownerTemplate: ownerTemplate, data: [] };
@@ -102,6 +107,36 @@ const MainComponent = () => {
     console.log(`Created prototype for input states`, inputFields)
     setAddDataInputFields(inputFields);
   }, [selectedFormJSON, ownerTemplate]);
+
+  const handleCreateEditFields = useCallback((id) => {
+    if (selectedFormJSON === "" || id === undefined) return;
+    console.log("handleCreateEditFields with id", id)
+    //console.log("columnTemplateData", columnTemplateData)
+    //console.log("allDataForForm: ", allDataForForm)
+    const dataForId = allDataForForm.filter(i => i.id === parseInt(id))
+    //console.log("dataForId: ", dataForId[0].data.data)
+    setCurrentEditData(dataForId[0])
+    const colTD = selectedFormJSON.templateColumnData;
+    let inputFieldsForEditing = { id: dataForId[0].id, ownerTemplate: dataForId[0].belongs_to_template, data: [] };
+    let existingKeyArray = []
+    for (let key of dataForId[0].data.data) {
+      existingKeyArray.push(Object.keys(key)[0])
+    }
+    //console.log("existingKeyArray:", existingKeyArray)
+    let idxCounter = 0;
+    for (let key of colTD) {
+      console.log(key.ColUniqueName)
+      if (existingKeyArray.includes(key.ColUniqueName)) {
+        inputFieldsForEditing.data.push({[key.ColUniqueName]: dataForId[0].data.data[idxCounter][key.ColUniqueName]})
+        idxCounter++;
+      }
+      else {
+        inputFieldsForEditing.data.push({[key.ColUniqueName]: ""})
+      }
+    }
+    console.log("Prototype for editing fields:", inputFieldsForEditing);
+    setEditDataInputFields(inputFieldsForEditing);
+  }, [allDataForForm, selectedFormJSON]);
 
   const handleChangeSelectedFormTemplate = (event) => {
     event.preventDefault();
@@ -122,6 +157,15 @@ const MainComponent = () => {
     //console.log("addDataInputFields: ", addDataInputFields)
   };
 
+  const handleChangedEditDataInput = (event, index) => {
+    event.preventDefault();
+    let workingData = [...editDataInputFields.data];
+    workingData[index][event.target.name] = event.target.value;
+    console.log("workingData: ", workingData)
+    let obj = { "data": workingData}
+    setEditDataInputFields(obj)
+  }
+
   const handleAddDataClicked = (event) => {
     event.preventDefault();
     handleCreateInputFields();
@@ -131,13 +175,27 @@ const MainComponent = () => {
   const handleEditDataButtonClicked = (event) => {
     event.preventDefault();
     console.log("Edit clicked on ", event.target)
+    handleCreateEditFields(event.target.value)
     if (!showAddData && !showEditData) setShowEditData(true);
   };
 
   const handleDeleteDataButtonClicked = (event) => {
     event.preventDefault();
     console.log("Delete clicked on ", event.target)
-    if (!showAddData && !showEditData) console.log("Replace this with alert!");
+    const deleteId = event.target.value
+    if (!showAddData && !showEditData) {
+      const question = `Delete entry with id: ${deleteId}?`;
+      const answer = window.confirm(question);
+      if (answer) {
+        handleDeleteConfirm(deleteId);
+      }
+      else {
+        handleDeleteCancel();
+      }
+    }
+    else {
+      window.alert("Can not delete while adding or editing data.")
+    }
   };
 
   const handleAddDataSave = useCallback(async (event) => {
@@ -145,6 +203,7 @@ const MainComponent = () => {
     console.log("Saving new data... ", addDataInputFields)
     let jsonWrapper = {}
     jsonWrapper.data = addDataInputFields.data
+    console.log(jsonWrapper)
     await axios.post("/api/data", {
       ownerTemplate: addDataInputFields.ownerTemplate,
       datas: jsonWrapper
@@ -155,16 +214,25 @@ const MainComponent = () => {
 
   const handleEditDataSave = useCallback(async (event) => {
     event.preventDefault();
-    console.log("Save edits...")
+    console.log("Save edits...", editDataInputFields)
+    //console.log("Get id from:", currentEditData)
     // Do stuff
+    let jsonWrapper = {}
+    jsonWrapper.data = editDataInputFields.data;
+    //console.log(jsonWrapper);
+    await axios.put(`/api/formdata/update/${currentEditData.id}`, { datas: jsonWrapper })
     if (showEditData) setShowEditData(false);
     getAllDataForForm();
-  }, [showEditData, getAllDataForForm]);
+  }, [showEditData, editDataInputFields, currentEditData, getAllDataForForm]);
 
-  const handleDeleteConfirm = useCallback(async (event) => {
-    event.preventDefault();
-    console.log("Deletion of data confirmed...")
-  }, []);
+  const handleDeleteConfirm = useCallback(async (deleteId) => {
+    console.log(`Deletion of data with id of ${deleteId} confirmed...`);
+    await axios.delete(`/api/formdata/delete/${deleteId}`)
+      .then((response) => {
+        console.log(response);
+        getAllDataForForm();
+      })
+  }, [getAllDataForForm]);
 
   const handleAddDataCancel = (event) => {
     event.preventDefault();
@@ -179,8 +247,7 @@ const MainComponent = () => {
     if (showEditData) setShowEditData(false);
   };
 
-  const handleDeleteCancel = (event) => {
-    event.preventDefault();
+  const handleDeleteCancel = () => {
     console.log("Deletion cancelled...")
   }
   
@@ -210,6 +277,7 @@ const MainComponent = () => {
 
   const tableView = () => {
     if (showTable) {
+      const cTDAll = columnTemplateData.map(entry => entry.ColUniqueName)
       //console.log(`JSON Metadata: `, templateMetadata)
       //console.log(`JSON ColumnData: `, columnTemplateData);
       //console.log(`JSON DisplayData: `, columnDisplayData);
@@ -233,23 +301,41 @@ const MainComponent = () => {
         );
       }
 
-      const trGen = () => {
+      const trGen = (cTDAll) => {
         return allDataForForm.map((row, index) => {
           return (
             <tr key={index}>
-              {tdGen(row.data.data)}
+              {tdGen(row.data.data, cTDAll)}
               {tdGenB(row.id)}
             </tr>
           );
         })
       }
 
-      const tdGen = (dataArray) => {
-        //console.log(dataArray)
-        return dataArray.map((dataPair, idx) => {
-          //console.log(dataPair, idx)
-          //console.log(dataPair[Object.keys(dataPair)[0]])
-          return <td key={Object.keys(dataPair)[0]}>{dataPair[Object.keys(dataPair)[0]]}</td>
+      const tdGen = (dataArray, cTDAll) => {
+        var indexCounter = 0;
+        //console.log("dataArray:", dataArray)
+        //console.log("columnTemplateData Array:", cTDAll)
+        let keyArray = []
+        for (let i = 0; i < dataArray.length; i++) {
+          keyArray.push(Object.keys(dataArray[i])[0])
+        }
+        //console.log("objectKeyArray:", ccc)
+        return cTDAll.map((tdKey, index) => {
+          //console.log("tdKey, index, indexcounter", tdKey, index, indexCounter, (index-indexCounter))
+          if (keyArray.includes(tdKey)) {
+            //console.log("it exists:", tdKey)
+            return (
+              <td key={tdKey}>{dataArray[index-indexCounter][tdKey]}</td>
+            );
+          }
+          else {
+            //console.log("it does NOT exist:", tdKey)
+            indexCounter++;
+            return (
+              <td key={tdKey}>NULL</td>
+            );
+          }
         })
       }
 
@@ -288,7 +374,7 @@ const MainComponent = () => {
               </tr>
             </thead>
             <tbody>
-              {trGen()}
+              {trGen(cTDAll)}
             </tbody>
           </table>
         </div>
@@ -338,7 +424,7 @@ const MainComponent = () => {
         </div>
       );
     }
-    else {
+    else if (!showEditData) {
       return (
         <div name="div-add_data_closed">
           <br/>
@@ -346,6 +432,50 @@ const MainComponent = () => {
             Add data
           </button>
           <br/>
+        </div>
+      );
+    }
+  }
+
+  const editDataCreateEditFields = (id) => {
+    //console.log("Creating edit fields")
+    //console.log("currentEditData open: ", currentEditData.data)
+    //console.log("editDataInputFields set: ", editDataInputFields)
+    //console.log("columnTemplateData: ", columnTemplateData)
+    return (
+      columnTemplateData.map((row, index) => {
+        return (
+          <React.Fragment key={`fragmentFor${row.ColUniqueName}`}>
+            <br />
+            <label htmlFor={row.ColUniqueName} key={`labelFor${row.ColUniqueName}`}>{`${row.ColStandaloneDisplayName}: `}</label>
+            {/*console.log(editDataInputFields.data[index])*/}
+            {/*console.log(editDataInputFields.data[index][row.ColUniqueName])*/}
+            <input 
+              name={row.ColUniqueName} 
+              id={row.ColUniqueName} 
+              key={index}
+              value={editDataInputFields.data[index][row.ColUniqueName]}
+              onChange={event => handleChangedEditDataInput(event, index)}
+            />
+          </React.Fragment>
+        );
+      })
+    );
+  }
+
+  const editDataView = (id) => {
+    if (!showEditData) return <div className="empty_div"></div>
+    if (showEditData) {
+      console.log("Showing editDataView...")
+      return (
+        <div name="div-edit_data_open">
+          <br/><br/>
+          <form className="form" name="form-edit_data" onSubmit={event => handleEditDataSave(event)}>
+            {editDataCreateEditFields(id)}
+            <br/><br/>
+            <button type="submit">Save edited data</button>
+            <button onClick={handleEditDataCancel}>Cancel</button>
+          </form>
         </div>
       );
     }
@@ -371,6 +501,7 @@ const MainComponent = () => {
       <p>{ /*JSON.stringify(selectedFormJSON)*/ }</p>
       {tableView()}
       {addDataView()}
+      {editDataView()}
     </div>
   );
 };

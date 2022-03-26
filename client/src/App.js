@@ -7,7 +7,7 @@ import UploadPage from "./components/UploadPage";
 function App() {
   return (
     <Router>
-      <Fragment className="fragment-main">
+      <Fragment key="mainFragment">
         <header className="header">
           <div className="headerTopDiv">Vitec Interview Task App</div>
           <Link to="/">Templates</Link>

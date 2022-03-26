@@ -152,13 +152,33 @@ app.get("/formdata/:fileHandle", async(req, res) => {
 app.post("/data", async (req, res) => {
   console.log("Logging req.body:")
   console.log(req.body)
-  if (!req.body.data) res.send({ working: false });
+  if (req.body.datas !== undefined) res.send({ working: false }); // Check this if not working
   console.log("Saving into db...")
   pgClient
     .query("INSERT INTO dataTable(belongs_to_template, data) VALUES($1, $2)", [req.body.ownerTemplate, req.body.datas])
     .catch(err => console.log("Saving into db failed...", err));
   res.send
   console.log("Data saved successfully!")
+});
+
+// Update a data entry
+app.put("/formdata/update/:id", async (req, res) => {
+  console.log(`Requesting updating of data entry with id: ${req.params.id}, Logging request body.datas:`);
+  console.log(req.body.datas)
+  if (req.body.datas !== undefined) res.send({ working: false });
+  pgClient
+    .query("UPDATE dataTable SET data = $1 WHERE id = $2", [req.body.datas, req.params.id])
+    .then(response => res.send(response))
+    .catch(err => console.log("Unable to update!", err))
+});
+
+// Delete a data entry
+app.delete("/formdata/delete/:id", async (req, res) => {
+  console.log(`Requesting deletion of data entry with id: ${req.params.id}`);
+  pgClient
+    .query("DELETE FROM dataTable WHERE id = $1", [req.params.id])
+    .then(response => res.send(response))
+    .catch(err => console.log("Unable to delete! ", err))
 });
 
 app.listen(5000, err => {
