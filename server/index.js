@@ -145,7 +145,7 @@ app.get("/formdata/:fileHandle", async(req, res) => {
     .query("SELECT * FROM dataTable WHERE belongs_to_template = $1", [req.params.fileHandle])
     .then(response => res.send(response))
     .catch(err => console.log(`Fetching data for ${req.params.fileHandle} failed. `, err))
-  console.log("Just logging in case...")
+  console.log("Logging just in case...")
 })
 
 // Post new data
@@ -157,7 +157,7 @@ app.post("/data", async (req, res) => {
   pgClient
     .query("INSERT INTO dataTable(belongs_to_template, data) VALUES($1, $2)", [req.body.ownerTemplate, req.body.datas])
     .catch(err => console.log("Saving into db failed...", err));
-  res.send
+  res.send();
   console.log("Data saved successfully!")
 });
 
@@ -168,8 +168,8 @@ app.put("/formdata/update/:id", async (req, res) => {
   if (req.body.datas !== undefined) res.send({ working: false });
   pgClient
     .query("UPDATE dataTable SET data = $1 WHERE id = $2", [req.body.datas, req.params.id])
-    .then(response => res.send(response))
     .catch(err => console.log("Unable to update!", err))
+  res.send();
 });
 
 // Delete a data entry

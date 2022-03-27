@@ -1,0 +1,58 @@
+# THIS docker-compose.yml FILE IS FOR USE WITH RUNNING ON A WINDOWS 10 HOST
+# SHOULD ONLY BE USED IF HAVING TROUBLE CONNECTING TO THE SERVICES USING THE docker-compose.yml IN PROJECT ROOT
+# REPLACE THE ORIGINAL FILE WITH THIS ONE IF YOU HAVE TROUBLE WITH IT
+services:
+  postgres:
+    image: "postgres:latest"
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres_password
+    ports:
+      - 5432:5432
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "80:80"
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: "./server"
+    volumes:
+      - /app/node_modules
+      - ./server:/app
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432
+    ports:
+      - 5000:5000
+  client:
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+    ports:
+      - 3000:3000
+  pgadmin:
+    image: dpage/pgadmin4
+    environment: 
+      PGADMIN_DEFAULT_PASSWORD: pgadmin4_pw
+      PGADMIN_DEFAULT_EMAIL: pg@pgadmin.com
+      PGADMIN_LISTEN_PORT: 8080
+    ports:
+      - 8080:8080
+    depends_on: 
+      - postgres

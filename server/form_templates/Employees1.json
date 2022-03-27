@@ -6,8 +6,8 @@
   },
   "templateColumnData": [
     {
-      "ColUniqueName": "EmployeeTestField5",
-      "ColStandaloneDisplayName": "Test field No5",
+      "ColUniqueName": "EmployeeTestField12",
+      "ColStandaloneDisplayName": "Test field No12",
       "ColDataType": "TEXT",
       "ColDataMinValue": 1,
       "ColDataMaxValue": 35,
@@ -30,24 +30,24 @@
       "ColPredefinedChoiceValues": []
     },
     {
-      "ColUniqueName": "EmployeeTestField2",
-      "ColStandaloneDisplayName": "Test field2",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 25,
-      "ColPredefinedChoiceValues": []
-    },
-    {
-      "ColUniqueName": "EmployeeTestField3",
-      "ColStandaloneDisplayName": "Test field3",
+      "ColUniqueName": "EmployeeTestField123",
+      "ColStandaloneDisplayName": "Test field No123",
       "ColDataType": "TEXT",
       "ColDataMinValue": 1,
       "ColDataMaxValue": 35,
       "ColPredefinedChoiceValues": []
     },
     {
-      "ColUniqueName": "EmployeeTestField4",
-      "ColStandaloneDisplayName": "Test field No4",
+      "ColUniqueName": "EmployeeTestField123456",
+      "ColStandaloneDisplayName": "Test field No123456",
+      "ColDataType": "TEXT",
+      "ColDataMinValue": 1,
+      "ColDataMaxValue": 35,
+      "ColPredefinedChoiceValues": []
+    },
+    {
+      "ColUniqueName": "EmployeeTestField1234",
+      "ColStandaloneDisplayName": "Test field No1234",
       "ColDataType": "TEXT",
       "ColDataMinValue": 1,
       "ColDataMaxValue": 35,
@@ -86,16 +86,8 @@
       "ColPredefinedChoiceValues": []
     },
     {
-      "ColUniqueName": "EmployeeTestField",
-      "ColStandaloneDisplayName": "Test field",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 80,
-      "ColPredefinedChoiceValues": []
-    },
-    {
-      "ColUniqueName": "EmployeeTestField6",
-      "ColStandaloneDisplayName": "Test field No6",
+      "ColUniqueName": "EmployeeTestFieldFINAL",
+      "ColStandaloneDisplayName": "Test field NoEND",
       "ColDataType": "TEXT",
       "ColDataMinValue": 1,
       "ColDataMaxValue": 35,

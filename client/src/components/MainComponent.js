@@ -10,9 +10,6 @@ const MainComponent = () => {
     console.log(`Render counter: ${renderCount.current}`)
   });
 
-
-
-  const [allData, setAllData] = useState([]);
   const [allDataForForm, setAllDataForForm] = useState([]);
 
   const [fileListPairArray, setFileListPairArray] = useState([]);
@@ -33,14 +30,6 @@ const MainComponent = () => {
   const [showTable, setShowTable] = useState(false);
   const [showAddData, setShowAddData] = useState(false);
   const [showEditData, setShowEditData] = useState(false);
-
-  const getAllData = useCallback(async () => {
-    const allDataFetch = await axios.get("/api/data/all");
-    //console.log("Logging inside getAllData: ", allDataFetch);
-    //console.log(allData.data.rows);
-    //setAllData(allData.data.rows.map(row => row.data));
-    setAllData(allDataFetch.data.rows);
-  }, []);
 
   const getAllDataForForm = useCallback(async () => {
     if (selectedForm === "") return
@@ -111,6 +100,54 @@ const MainComponent = () => {
   const handleCreateEditFields = useCallback((id) => {
     if (selectedFormJSON === "" || id === undefined) return;
     console.log("handleCreateEditFields with id", id)
+    console.log("columnTemplateData", columnTemplateData)
+    console.log("allDataForForm: ", allDataForForm)
+    const dataForId = allDataForForm.filter(i => i.id === parseInt(id))
+    console.log("dataForId: ", dataForId[0].data.data)
+    setCurrentEditData(dataForId[0])
+    const colTD = selectedFormJSON.templateColumnData;
+    let inputFieldsForEditing = { id: dataForId[0].id, ownerTemplate: dataForId[0].belongs_to_template, data: [] };
+    let existingKeyArray = []
+    let colUniqueNameKeyArray = []
+    let abc = [];
+    for (let entry of columnTemplateData) {
+      //console.log("log columnTemplateData entry", entry.ColUniqueName)
+      colUniqueNameKeyArray.push(entry.ColUniqueName)
+    }
+    console.log("colUniqueNameKeyArray", colUniqueNameKeyArray)
+    for (let key of dataForId[0].data.data) {
+      //console.log("log key:", key)
+      //console.log("log Object.keys(key)[0]:", Object.keys(key)[0])
+      //console.log("indexOf:", colUniqueNameKeyArray.indexOf(Object.keys(key)[0]))
+      if (colUniqueNameKeyArray.indexOf(Object.keys(key)[0]) >= 0) {
+        existingKeyArray.push(Object.keys(key)[0])
+        abc.push(key);
+      }
+    }
+    console.log("existingKeyArray:", existingKeyArray)
+    console.log("dataForId: ", dataForId[0].data.data)
+    console.log("abc:", abc)
+    let idxCounter = 0;
+    for (let key of colTD) {
+      console.log("key of colTD", key)
+      console.log("key.ColUniqueName", key.ColUniqueName)
+      if (!existingKeyArray.includes(key.ColUniqueName)) {
+        console.log("new key found:", key.ColUniqueName)
+        inputFieldsForEditing.data.push({[key.ColUniqueName]: ""})
+      }
+      else {
+        console.log("existing key found:", key.ColUniqueName)
+        inputFieldsForEditing.data.push({[key.ColUniqueName]: abc[idxCounter][key.ColUniqueName]})
+        idxCounter++;
+      }
+    }
+    console.log("Prototype for editing fields:", inputFieldsForEditing);
+    setEditDataInputFields(inputFieldsForEditing);
+  }, [allDataForForm, columnTemplateData, selectedFormJSON]);
+
+  /*const handleCreateEditFieldsBACKUP = useCallback((id) => {
+    if (selectedFormJSON === "" || id === undefined) return;
+    console.log("handleCreateEditFields with id", id)
     //console.log("columnTemplateData", columnTemplateData)
     //console.log("allDataForForm: ", allDataForForm)
     const dataForId = allDataForForm.filter(i => i.id === parseInt(id))
@@ -136,7 +173,7 @@ const MainComponent = () => {
     }
     console.log("Prototype for editing fields:", inputFieldsForEditing);
     setEditDataInputFields(inputFieldsForEditing);
-  }, [allDataForForm, selectedFormJSON]);
+  }, [allDataForForm, selectedFormJSON]);*/
 
   const handleChangeSelectedFormTemplate = (event) => {
     event.preventDefault();
@@ -250,10 +287,6 @@ const MainComponent = () => {
   const handleDeleteCancel = () => {
     console.log("Deletion cancelled...")
   }
-  
-  useEffect(() => {
-    getAllData();
-  }, [getAllData]);
 
   useEffect(() => {
     getFilelistObject();
@@ -301,41 +334,54 @@ const MainComponent = () => {
         );
       }
 
-      const trGen = (cTDAll) => {
+      const trGen = (columnDataTableArray) => {
         return allDataForForm.map((row, index) => {
           return (
             <tr key={index}>
-              {tdGen(row.data.data, cTDAll)}
+              {tdGenV3(row.data.data, columnDataTableArray)}
               {tdGenB(row.id)}
             </tr>
           );
         })
       }
 
-      const tdGen = (dataArray, cTDAll) => {
+      const tdGenV3 = (dataArray, columnDataTableArray) => {
         var indexCounter = 0;
         //console.log("dataArray:", dataArray)
-        //console.log("columnTemplateData Array:", cTDAll)
+        //console.log("columnTemplateData Array:", columnDataTableArray)
         let keyArray = []
+        let keyArrayB = []
+        let leftOvers = []
+        let extras = []
         for (let i = 0; i < dataArray.length; i++) {
-          keyArray.push(Object.keys(dataArray[i])[0])
+          if (columnDataTableArray.includes(Object.keys(dataArray[i])[0])) {
+            keyArray.push(dataArray[i])
+            keyArrayB.push(Object.keys(dataArray[i])[0])
+          }
+          else {
+            leftOvers.push(dataArray[i])
+          }
         }
-        //console.log("objectKeyArray:", ccc)
-        return cTDAll.map((tdKey, index) => {
-          //console.log("tdKey, index, indexcounter", tdKey, index, indexCounter, (index-indexCounter))
-          if (keyArray.includes(tdKey)) {
-            //console.log("it exists:", tdKey)
+        //console.log("keyArray:", keyArray)
+        //console.log("keyArrayB:", keyArrayB)
+        //console.log("leftOvers:", leftOvers)
+        return columnDataTableArray.map((entryKey, index) => {
+          //console.log(`entryKey: ${entryKey} (columnDataTableArray) exists @idx ${keyArray.indexOf(entryKey)} in keyArray`)
+          //console.log(keyArrayB.indexOf(entryKey))
+          if (keyArrayB.indexOf(entryKey) >= 0) {
+            
+            //console.log(keyArray[keyArrayB.indexOf(entryKey)])
+            //console.log(keyArray[keyArrayB.indexOf(entryKey)][entryKey])
             return (
-              <td key={tdKey}>{dataArray[index-indexCounter][tdKey]}</td>
+              <td key={entryKey}>{keyArray[keyArrayB.indexOf(entryKey)][entryKey]}</td>
             );
           }
           else {
-            //console.log("it does NOT exist:", tdKey)
-            indexCounter++;
             return (
-              <td key={tdKey}>NULL</td>
+              <td key={entryKey}></td>
             );
           }
+          
         })
       }
 
@@ -437,10 +483,10 @@ const MainComponent = () => {
     }
   }
 
-  const editDataCreateEditFields = (id) => {
-    //console.log("Creating edit fields")
+  const editDataCreateEditFields = () => {
+    console.log("Creating edit fields")
     //console.log("currentEditData open: ", currentEditData.data)
-    //console.log("editDataInputFields set: ", editDataInputFields)
+    console.log("editDataInputFields set: ", editDataInputFields)
     //console.log("columnTemplateData: ", columnTemplateData)
     return (
       columnTemplateData.map((row, index) => {
@@ -448,8 +494,8 @@ const MainComponent = () => {
           <React.Fragment key={`fragmentFor${row.ColUniqueName}`}>
             <br />
             <label htmlFor={row.ColUniqueName} key={`labelFor${row.ColUniqueName}`}>{`${row.ColStandaloneDisplayName}: `}</label>
-            {/*console.log(editDataInputFields.data[index])*/}
-            {/*console.log(editDataInputFields.data[index][row.ColUniqueName])*/}
+            {/*console.log("editDataInputFields.data[index]", editDataInputFields.data[index])*/}
+            {/*console.log("editDataInputFields.data[index][row.ColUniqueName]", editDataInputFields.data[index][row.ColUniqueName])*/}
             <input 
               name={row.ColUniqueName} 
               id={row.ColUniqueName} 
