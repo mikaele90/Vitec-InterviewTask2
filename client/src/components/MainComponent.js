@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "./MainComponent.css";
 
-function MainComponent() {
+export default function MainComponent() {
   // Render counter for keeping renders in check
   const renderCount = useRef(1);
   useEffect(() => {
@@ -451,5 +451,3 @@ function MainComponent() {
     </div>
   );
 };
-
-export default MainComponent;
