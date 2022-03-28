@@ -10,7 +10,7 @@
 - Download zip and unzip
 - Run ``docker-compose up --build`` in project root
 - Go to ``http://localhost:3050`` in your browser and you should be on the main page (pgadmin4 - a frontend for postgres - can be found at ``http://localhost:9090``)
-- IMPORTANT: During testing it was found that the ``docker-compose.yml`` file that exists in the project root might have connection troubles on Windows hosts. If you are having trouble with reaching the front page then replace that ``docker-compose.yml`` file with the one in ``windows-dockercompose-file``-directory. The main endpoints for it are ``http://localhost:80`` and ``http://localhost:9090``.
+- IMPORTANT: During testing it was found that the ``docker-compose.yml`` file that exists in the project root might have connection troubles on Windows hosts. If you are having trouble with reaching the front page then replace that ``docker-compose.yml`` file with the one in ``windows-dockercompose-file``-directory. The main endpoints for it are ``http://localhost:80`` and ``http://localhost:8080``.
 
 <br />
 

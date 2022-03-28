@@ -1,18 +1,15 @@
 import { Fragment } from "react";
 import "./App.css";
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import MainComponent from "./components/MainComponent";
 import UploadPage from "./components/UploadPage";
+import Header from "./components/Header"
 
 function App() {
   return (
     <Router>
       <Fragment key="mainFragment">
-        <header className="header">
-          <div className="headerTopDiv">Vitec Interview Task App</div>
-          <Link to="/">Templates</Link>
-          <Link to="/upload">Upload</Link>
-        </header>
+        <Header />
         <div className="main">
           <Route exact path="/" component={MainComponent} />
           <Route path="/upload" component={UploadPage} />

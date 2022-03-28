@@ -1,0 +1,17 @@
+.header {
+  background: rgb(202, 202, 202);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  padding-top: 2px;
+}
+
+.headerTopDiv {
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.header a {
+  margin-left: 10px;
+}
