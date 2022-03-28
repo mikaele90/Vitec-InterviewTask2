@@ -1,22 +1,21 @@
-const keys = require("./keys");
+// DB Keys
+const keys = require('./keys');
 
 // Express Application setup
-const express = require("express");
-//const bodyParser = require("body-parser");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 const formTemplateDirectory = path.join(__dirname, "form_templates");
 
 const app = express();
 app.use(cors());
-//app.use(bodyParser.json());
-app.use(express.json()) // for parsing application/json
-app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Postgres client setup
-const { Pool } = require("pg");
+const { Pool } = require('pg');
 const pgClient = new Pool({
   user: keys.pgUser,
   host: keys.pgHost,
@@ -146,7 +145,7 @@ app.get("/formdata/:fileHandle", async(req, res) => {
     .then(response => res.send(response))
     .catch(err => console.log(`Fetching data for ${req.params.fileHandle} failed. `, err))
   console.log("Logging just in case...")
-})
+});
 
 // Post new data
 app.post("/data", async (req, res) => {

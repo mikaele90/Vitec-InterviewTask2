@@ -6,14 +6,6 @@
   },
   "templateColumnData": [
     {
-      "ColUniqueName": "EmployeeTestField12",
-      "ColStandaloneDisplayName": "Test field No12",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 35,
-      "ColPredefinedChoiceValues": []
-    },
-    {
       "ColUniqueName": "EmployeeFirstName",
       "ColStandaloneDisplayName": "First name",
       "ColDataType": "TEXT",
@@ -27,30 +19,6 @@
       "ColDataType": "TEXT",
       "ColDataMinValue": 1,
       "ColDataMaxValue": 50,
-      "ColPredefinedChoiceValues": []
-    },
-    {
-      "ColUniqueName": "EmployeeTestField123",
-      "ColStandaloneDisplayName": "Test field No123",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 35,
-      "ColPredefinedChoiceValues": []
-    },
-    {
-      "ColUniqueName": "EmployeeTestField123456",
-      "ColStandaloneDisplayName": "Test field No123456",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 35,
-      "ColPredefinedChoiceValues": []
-    },
-    {
-      "ColUniqueName": "EmployeeTestField1234",
-      "ColStandaloneDisplayName": "Test field No1234",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 35,
       "ColPredefinedChoiceValues": []
     },
     {
@@ -83,14 +51,6 @@
       "ColDataType": "BOOLEAN",
       "ColDataMinValue": false,
       "ColDataMaxValue": true,
-      "ColPredefinedChoiceValues": []
-    },
-    {
-      "ColUniqueName": "EmployeeTestFieldFINAL",
-      "ColStandaloneDisplayName": "Test field NoEND",
-      "ColDataType": "TEXT",
-      "ColDataMinValue": 1,
-      "ColDataMaxValue": 35,
       "ColPredefinedChoiceValues": []
     }
   ],

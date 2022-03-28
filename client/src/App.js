@@ -1,11 +1,12 @@
-import { Fragment } from "react";
-import "./App.css";
-import { BrowserRouter as Router, Route } from "react-router-dom";
-import MainComponent from "./components/MainComponent";
-import UploadPage from "./components/UploadPage";
-import Header from "./components/Header"
+import { Fragment } from 'react';
+import './App.css';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
+import MainComponent from './components/MainComponent';
+import UploadPage from './components/UploadPage';
+import Header from './components/Header';
 
-function App() {
+export default function App() {
+
   return (
     <Router>
       <Fragment key="mainFragment">
@@ -17,6 +18,5 @@ function App() {
       </Fragment>
     </Router>
   );
-}
 
-export default App;
+}

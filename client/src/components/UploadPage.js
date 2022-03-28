@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
-import "./UploadPage.css";
+import { Link } from 'react-router-dom';
+import './UploadPage.css';
 
-export default function UploadPage() {
+const UploadPage = () => {
   return (
     <div>
       <p>Upload json-files (Not yet implemented)</p>
@@ -9,3 +9,5 @@ export default function UploadPage() {
     </div>
   );
 };
+
+export default UploadPage;

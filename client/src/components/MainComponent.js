@@ -1,18 +1,15 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
-import axios from "axios";
-import "./MainComponent.css";
+import React, { useCallback, useState, useEffect } from 'react';
+import axios from 'axios';
+import './MainComponent.css';
 
-export default function MainComponent() {
-  // Render counter for keeping renders in check
-  const renderCount = useRef(1);
-  useEffect(() => {
-    renderCount.current++;
-    //console.log(`Render counter: ${renderCount.current}`)
-  });
+import SelectFormTemplate from './SelectFormTemplate';
+import DynamicTable from './DynamicTable';
+import AddDataView from './AddDataView';
+import EditDataView from './EditDataView';
 
+const MainComponent = () => {
+  
   const [allDataForForm, setAllDataForForm] = useState([]);
-
-  const [fileListPairArray, setFileListPairArray] = useState([]);
 
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedFormJSON, setSelectedFormJSON] = useState("");
@@ -38,25 +35,9 @@ export default function MainComponent() {
         setAllDataForForm(response.data.rows);
       })
       .catch(err => {
-        console.log("Error during fetching all data for selected form", err)
+        console.log("Error during fetching all data for selected form.", err)
       })
   }, [selectedForm]);
-
-  const getFilelistObject = useCallback(async () => {
-    const fetchedFileListObject = await axios.get("/api/templates/all/filelistobject");
-    let sortedFileListObject = fetchedFileListObject.data.sort((a, b) => {
-      let displayNameA = a.dname.toLowerCase();
-      let displayNameB = b.dname.toLowerCase();
-      if (displayNameA < displayNameB) {
-          return -1;
-      }
-      if (displayNameA > displayNameB) {
-          return 1;
-      }
-      else return 0;
-    });
-    setFileListPairArray(sortedFileListObject);
-  }, []);
 
   const getFormTemplateFile = useCallback(async () => {
     if (selectedForm === "") return
@@ -66,7 +47,7 @@ export default function MainComponent() {
         setOwnerTemplate(selectedForm)
       })
       .catch(err => {
-        console.log("Error occured during fetch. ", err)
+        console.log("Error occured during fetch of template file.", err)
       })
   }, [selectedForm]);
 
@@ -99,14 +80,14 @@ export default function MainComponent() {
     let inputFieldsForEditing = { id: dataForId[0].id, ownerTemplate: dataForId[0].belongs_to_template, data: [] };
     let existingKeyArray = []
     let colUniqueNameKeyArray = []
-    let abc = [];
+    let dataArray = [];
     for (let entry of columnTemplateData) {
       colUniqueNameKeyArray.push(entry.ColUniqueName)
     }
     for (let key of dataForId[0].data.data) {
       if (colUniqueNameKeyArray.indexOf(Object.keys(key)[0]) >= 0) {
         existingKeyArray.push(Object.keys(key)[0])
-        abc.push(key);
+        dataArray.push(key);
       }
     }
     let idxCounter = 0;
@@ -115,7 +96,7 @@ export default function MainComponent() {
         inputFieldsForEditing.data.push({[key.ColUniqueName]: ""})
       }
       else {
-        inputFieldsForEditing.data.push({[key.ColUniqueName]: abc[idxCounter][key.ColUniqueName]})
+        inputFieldsForEditing.data.push({[key.ColUniqueName]: dataArray[idxCounter][key.ColUniqueName]})
         idxCounter++;
       }
     }
@@ -147,7 +128,7 @@ export default function MainComponent() {
   const handleAddDataClicked = (event) => {
     event.preventDefault();
     handleCreateInputFields();
-    if (!showAddData) setShowAddData(true);
+    if (!showAddData && !showEditData) setShowAddData(true);
   };
 
   const handleEditDataButtonClicked = (event) => {
@@ -218,10 +199,6 @@ export default function MainComponent() {
   }
 
   useEffect(() => {
-    getFilelistObject();
-  }, [getFilelistObject]);
-
-  useEffect(() => {
     getFormTemplateFile();
   }, [getFormTemplateFile]);
 
@@ -237,217 +214,50 @@ export default function MainComponent() {
     getAllDataForForm();
   }, [getAllDataForForm])
 
-  const tableView = () => {
-    if (showTable) {
-      const cTDAll = columnTemplateData.map(entry => entry.ColUniqueName)
-
-      const thGen = () => {
-        return columnTemplateData.map((row) => {
-          return (
-            <th key={row.ColUniqueName}>
-              {row.ColStandaloneDisplayName}
-            </th>
-          );
-        })
-      }
-
-      const thGenB = () => {
-        return (
-          <React.Fragment key="buttonHeaderKey">
-            <th key="editButtonHeader">Edit</th>
-            <th key="deleteButtonHeader">Delete</th>
-          </React.Fragment>
-        );
-      }
-
-      const trGen = (columnDataTableArray) => {
-        return allDataForForm.map((row, index) => {
-          return (
-            <tr key={index}>
-              {tdGenV3(row.data.data, columnDataTableArray)}
-              {tdGenB(row.id)}
-            </tr>
-          );
-        })
-      }
-
-      const tdGenV3 = (dataArray, columnDataTableArray) => {
-        var indexCounter = 0;
-        let keyArray = []
-        let keyArrayB = []
-        let leftOvers = []
-        let extras = []
-        for (let i = 0; i < dataArray.length; i++) {
-          if (columnDataTableArray.includes(Object.keys(dataArray[i])[0])) {
-            keyArray.push(dataArray[i])
-            keyArrayB.push(Object.keys(dataArray[i])[0])
-          }
-          else {
-            leftOvers.push(dataArray[i])
-          }
-        }
-
-        return columnDataTableArray.map((entryKey, index) => {
-          if (keyArrayB.indexOf(entryKey) >= 0) {
-            return (
-              <td key={entryKey}>{keyArray[keyArrayB.indexOf(entryKey)][entryKey]}</td>
-            );
-          }
-          else {
-            return (
-              <td key={entryKey}></td>
-            );
-          }
-        })
-      }
-
-      const tdGenB = (id) => {
-        return (
-          <React.Fragment key="buttonCells">
-            <td value={id} name="cell-edit_button" key="editButtonCell">
-              <button 
-                name="button-edit"
-                value={id}
-                onClick={handleEditDataButtonClicked}
-              >
-                  Edit
-              </button>
-            </td>
-            <td value={id} name="cell-delete_button" key="deleteButtonCell">
-              <button 
-                name="button-delete"
-                value={id}
-                onClick={handleDeleteDataButtonClicked}
-              >
-                Delete
-              </button>
-            </td>
-          </React.Fragment>
-        );
-      }
-
-      return (
-        <div name="div-table_view">
-          <table name="dynamic-table" id={templateMetadata.templateDisplayName} key={templateMetadata.templateUniqueName}>
-            <thead>
-              <tr>
-                {thGen()}
-                {thGenB()}
-              </tr>
-            </thead>
-            <tbody>
-              {trGen(cTDAll)}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-    else return <div><p>Select a form template to work with...</p></div>
-  }
-
-  const addDataCreateInputFields = () => {
-    return (
-        columnTemplateData.map((colRow, index) => {
-          return (
-            <React.Fragment key={`fragmentFor${colRow.ColUniqueName}`}>
-              <br />
-              <label htmlFor={colRow.ColUniqueName} key={`labelFor${colRow.ColUniqueName}`}>{`${colRow.ColStandaloneDisplayName}: `}</label>
-              <input 
-                name={colRow.ColUniqueName} 
-                id={colRow.ColUniqueName} 
-                key={index}
-                onChange={event => handleChangedAddDataInput(event, index)}
-              />
-            </React.Fragment>
-          );
-        })
-    );
-  }
-
-  const addDataView = () => {
-    if (!showTable) return <div className="empty_div"></div>
-    if (showAddData) {
-      return (
-        <div name="div-add_data_open">
-          <form className="form" onSubmit={handleAddDataSave}>
-            <br/><br/>
-            {addDataCreateInputFields()}
-            <br/><br/>
-            <button type="submit">Submit data</button>
-            <button onClick={handleAddDataCancel}>Cancel</button>
-          </form>
-        </div>
-      );
-    }
-    else if (!showEditData) {
-      return (
-        <div name="div-add_data_closed">
-          <br/>
-          <button name="button-add_data" onClick={handleAddDataClicked}>
-            Add data
-          </button>
-          <br/>
-        </div>
-      );
-    }
-  }
-
-  const editDataCreateEditFields = () => {
-    return (
-      columnTemplateData.map((row, index) => {
-        return (
-          <React.Fragment key={`fragmentFor${row.ColUniqueName}`}>
-            <br />
-            <label htmlFor={row.ColUniqueName} key={`labelFor${row.ColUniqueName}`}>{`${row.ColStandaloneDisplayName}: `}</label>
-            <input 
-              name={row.ColUniqueName} 
-              id={row.ColUniqueName} 
-              key={index}
-              value={editDataInputFields.data[index][row.ColUniqueName]}
-              onChange={event => handleChangedEditDataInput(event, index)}
-            />
-          </React.Fragment>
-        );
-      })
-    );
-  }
-
-  const editDataView = (id) => {
-    if (!showEditData) return <div className="empty_div"></div>
-    if (showEditData) {
-      return (
-        <div name="div-edit_data_open">
-          <br/><br/>
-          <form className="form" name="form-edit_data" onSubmit={event => handleEditDataSave(event)}>
-            {editDataCreateEditFields(id)}
-            <br/><br/>
-            <button type="submit">Save edited data</button>
-            <button onClick={handleEditDataCancel}>Cancel</button>
-          </form>
-        </div>
-      );
-    }
-  }
-
   return (
     <div>
       <br />
       <span className="title">Templates</span>
       <br /><br />
 
-      <form name="form-select_template">
-        <select name="select-form_templates" defaultValue={"Select template..."} onChange={handleChangeSelectedFormTemplate}>
-          <option value="Select template..." disabled hidden>Select template...</option>
-          {fileListPairArray.map((dataRow) => (
-            <option value={dataRow.fname} key={dataRow.fname}>{dataRow.dname}</option>
-          ))}
-        </select>
-      </form>
-      
+      <SelectFormTemplate handleChangeSelectedFormTemplate={handleChangeSelectedFormTemplate}/>
+
       <p>Selected file: { (selectedForm === "") ? "None" : selectedForm }</p>
-      {tableView()}
-      {addDataView()}
-      {editDataView()}
+
+      <DynamicTable 
+        show={showTable} 
+        templateMetadata={templateMetadata} 
+        templateData={columnTemplateData} 
+        templateDisplayData={columnDisplayData}
+        currentFormData={allDataForForm} 
+        editClick={handleEditDataButtonClicked} 
+        deleteClick={handleDeleteDataButtonClicked}
+      />
+
+      <AddDataView 
+        show={showAddData} 
+        showTable={showTable} 
+        showEditView={showEditData} 
+        templateData={columnTemplateData} 
+        addClick={handleAddDataClicked} 
+        inputChange={handleChangedAddDataInput} 
+        save={handleAddDataSave} 
+        cancel={handleAddDataCancel}
+      />
+
+      <EditDataView 
+        show={showEditData} 
+        showAddView={showAddData}
+        templateData={columnTemplateData} 
+        inputFields={editDataInputFields} 
+        inputChange={handleChangedEditDataInput} 
+        save={handleEditDataSave} 
+        cancel={handleEditDataCancel}
+      />
+
+      <br />
     </div>
   );
 };
+
+export default MainComponent;

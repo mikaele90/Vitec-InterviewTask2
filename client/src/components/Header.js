@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
-import "./Header.css";
+import { Link } from 'react-router-dom';
+import './Header.css';
 
-export default function Header() {
+const Header = () => {
   return (
     <header className="header">
       <div className="headerTopDiv">Vitec Interview Task App</div>
@@ -10,3 +10,5 @@ export default function Header() {
     </header>
   );
 }
+
+export default Header;
