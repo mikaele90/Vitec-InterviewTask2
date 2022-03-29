@@ -30,7 +30,7 @@ const MainComponent = () => {
 
   const getAllDataForForm = useCallback(async () => {
     if (selectedForm === "") return
-    await axios.get(`/api/formdata/${selectedForm}`)
+    await axios.get(`/api/formdata/get/${selectedForm}`)
       .then(response => {
         setAllDataForForm(response.data.rows);
       })
@@ -159,7 +159,7 @@ const MainComponent = () => {
     event.preventDefault();
     let jsonWrapper = {}
     jsonWrapper.data = addDataInputFields.data
-    await axios.post("/api/data", {
+    await axios.post("/api/formdata/new", {
       ownerTemplate: addDataInputFields.ownerTemplate,
       datas: jsonWrapper
     });

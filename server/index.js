@@ -24,10 +24,19 @@ const pgClient = new Pool({
   port: keys.pgPort
 });
 
+/**
+ * Create table and create index using the hash function.
+ * It's unlikely that the query optimizer uses the index unless there's a lot of data in the table.
+ */
 pgClient.on("connect", client => {
   client
     .query("CREATE TABLE IF NOT EXISTS dataTable (id SERIAL PRIMARY KEY, belongs_to_template VARCHAR, data JSONB)")
-    .catch(err => console.log("Problem with postgres on connect", err));
+    //.then(result => console.log(result.command))
+    .catch(err => console.log("Problem with postgres on connect during CREATE TABLE.", err));
+  client
+    .query("CREATE INDEX IF NOT EXISTS IDX_OwnerTemplate ON datatable USING hash (belongs_to_template)")
+    //.then(result => console.log(result.command))
+    .catch(err => console.log("Problem with postgres on connect during CREATE INDEX.", err))
 });
 
 //Express route definitions
@@ -121,65 +130,63 @@ app.get("/templates/:fileName", (req, res) => {
   console.log(`Requesting file: ${req.params.fileName}`)
   fs.promises.readFile(path.join(formTemplateDirectory, req.params.fileName), 'utf-8')
     .then(file => {
-      console
+      console.log(file)
       res.send(file)
     })
     .catch(err => {
-      res.send("")
       console.log("File not sent...", err)
     })
 });
 
-// Get all data
-app.get("/data/all", async (req, res) => {
+// Get all data: Not in use for now
+/*app.get("/data/all", async (req, res) => {
   const allData = await pgClient.query("SELECT * FROM dataTable");
   //console.log(allData.rows)
   res.send(allData);
-});
+});*/
 
-// Get all data for specific form
-app.get("/formdata/:fileHandle", async(req, res) => {
-  console.log(`Requesting data for file: ${req.params.fileHandle}`);
-  pgClient
-    .query("SELECT * FROM dataTable WHERE belongs_to_template = $1", [req.params.fileHandle])
-    .then(response => res.send(response))
-    .catch(err => console.log(`Fetching data for ${req.params.fileHandle} failed. `, err))
-  console.log("Logging just in case...")
+// Get all associated data for a specific form based on its file name
+app.get("/formdata/get/:fileName", async(req, res) => {
+  console.log(`Requesting data for file: ${req.params.fileName}`);
+  await pgClient
+    .query("SELECT * FROM dataTable WHERE belongs_to_template = $1", [req.params.fileName])
+    .then(result => res.send(result))
+    .catch(err => console.log(`Fetching data for ${req.params.fileName} failed. `, err))
 });
 
 // Post new data
-app.post("/data", async (req, res) => {
+app.post("/formdata/new", async (req, res) => {
   console.log("Logging req.body:")
   console.log(req.body)
-  if (req.body.datas !== undefined) res.send({ working: false }); // Check this if not working
+  if (req.body.datas === undefined) res.send({ working: false });
   console.log("Saving into db...")
-  pgClient
+  await pgClient
     .query("INSERT INTO dataTable(belongs_to_template, data) VALUES($1, $2)", [req.body.ownerTemplate, req.body.datas])
+    .then(result => res.send(result))
     .catch(err => console.log("Saving into db failed...", err));
-  res.send();
-  console.log("Data saved successfully!")
 });
 
 // Update a data entry
 app.put("/formdata/update/:id", async (req, res) => {
   console.log(`Requesting updating of data entry with id: ${req.params.id}, Logging request body.datas:`);
   console.log(req.body.datas)
-  if (req.body.datas !== undefined) res.send({ working: false });
-  pgClient
+  if (req.body.datas === undefined) res.send({ working: false });
+  await pgClient
     .query("UPDATE dataTable SET data = $1 WHERE id = $2", [req.body.datas, req.params.id])
+    .then(result => res.send(result))
     .catch(err => console.log("Unable to update!", err))
-  res.send();
 });
 
 // Delete a data entry
 app.delete("/formdata/delete/:id", async (req, res) => {
   console.log(`Requesting deletion of data entry with id: ${req.params.id}`);
-  pgClient
+  await pgClient
     .query("DELETE FROM dataTable WHERE id = $1", [req.params.id])
-    .then(response => res.send(response))
+    .then(result => res.send(result))
     .catch(err => console.log("Unable to delete! ", err))
 });
 
+// Listen to port
 app.listen(5000, err => {
   console.log("Listening...");
 });
