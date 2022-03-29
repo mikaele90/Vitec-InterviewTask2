@@ -22,19 +22,19 @@
       "ColPredefinedChoiceValues": []
     },
     {
-      "ColUniqueName": "EmployeeDOB",
-      "ColStandaloneDisplayName": "Date of birth",
-      "ColDataType": "DATEONLY",
-      "ColDataMinValue": "01.01.1900",
-      "ColDataMaxValue": "01.01.2022",
-      "ColPredefinedChoiceValues": []
-    },
-    {
       "ColUniqueName": "EmployeeInternalId",
       "ColStandaloneDisplayName": "ID",
       "ColDataType": "NUMBER",
       "ColDataMinValue": 10000,
       "ColDataMaxValue": 99999,
+      "ColPredefinedChoiceValues": []
+    },
+    {
+      "ColUniqueName": "EmployeeDOB",
+      "ColStandaloneDisplayName": "Date of birth",
+      "ColDataType": "DATE_DMY",
+      "ColDataMinValue": "01.01.1900",
+      "ColDataMaxValue": "01.01.2022",
       "ColPredefinedChoiceValues": []
     },
     {

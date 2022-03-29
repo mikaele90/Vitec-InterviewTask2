@@ -1,23 +1,72 @@
 import { Fragment } from "react";
 import './AddDataView.css';
 
+import convertType from './component_functions/ConvertInputType';
+
 const AddDataView = ( { show, showTable, showEditView, templateData, addClick, inputChange, save, cancel } ) => {
+
+  const inputFieldProvider = (templateDataRow, index) => {
+    const uniqueName = templateDataRow.ColUniqueName;
+    const printName = templateDataRow.ColStandaloneDisplayName;
+    const dt = templateDataRow.ColDataType;
+    switch (dt) {
+      case 'TEXT':
+      case 'NUMBER':
+      case 'DATE_DMY':
+        return (
+          <Fragment key={`fragmentFor${uniqueName}`}>
+            <br />
+            <label htmlFor={uniqueName} key={`labelFor${uniqueName}`}>{`${printName}: `}</label>
+            <input 
+              name={uniqueName}
+              id={uniqueName} 
+              key={uniqueName}
+              type={convertType(dt)}
+              onChange={event => inputChange(event, index)}
+            />
+          </Fragment>
+        );
+      case 'BOOLEAN':
+        return (
+          <Fragment key={`fragmentFor${uniqueName}`}>
+            <br />
+            <label htmlFor={uniqueName} key={`labelFor${uniqueName}`}>{`${printName}: `}</label>
+            <input 
+              name={uniqueName}
+              id={uniqueName} 
+              key={uniqueName}
+              type="checkbox"
+              defaultChecked={false}
+              onChange={event => inputChange(event, index)}
+            />
+          </Fragment>
+        );
+      case 'PREDEFINED_CHOICE':
+        return (
+          <Fragment key={`fragmentFor${uniqueName}`}>
+            <br />
+            <label htmlFor={uniqueName} key={`labelFor${uniqueName}`}>{`${printName}: `}</label>
+            <select name={uniqueName} defaultValue={"Select department..."} onChange={event => inputChange(event, index)}>
+              <option value="Select department..." disabled hidden>Select department...</option>
+              {templateDataRow.ColPredefinedChoiceValues.map((entry) => (
+                <option value={entry} key={entry}>{entry}</option>
+              ))}
+            </select>
+          </Fragment>
+        );
+      default:
+        return (
+          <Fragment key={`Undetermined-At-Index-${index}`}>
+            <p name="p-error_input_type">Unable to determine input type.</p>
+          </Fragment>
+        );
+    }
+  }
 
   const addDataCreateInputFields = () => {
     return (
-        templateData.map((colRow, index) => {
-          return (
-            <Fragment key={`fragmentFor${colRow.ColUniqueName}`}>
-              <br />
-              <label htmlFor={colRow.ColUniqueName} key={`labelFor${colRow.ColUniqueName}`}>{`${colRow.ColStandaloneDisplayName}: `}</label>
-              <input 
-                name={colRow.ColUniqueName} 
-                id={colRow.ColUniqueName} 
-                key={index}
-                onChange={event => inputChange(event, index)}
-              />
-            </Fragment>
-          );
+        templateData.map((templateDataRow, index) => {
+          return inputFieldProvider(templateDataRow, index)
         })
     );
   }

@@ -7,6 +7,8 @@ import DynamicTable from './DynamicTable';
 import AddDataView from './AddDataView';
 import EditDataView from './EditDataView';
 
+import getTypeDefault from './component_functions/GetInputTypeDefaultValue';
+
 const MainComponent = () => {
   
   const [allDataForForm, setAllDataForForm] = useState([]);
@@ -28,6 +30,9 @@ const MainComponent = () => {
   const [showAddData, setShowAddData] = useState(false);
   const [showEditData, setShowEditData] = useState(false);
 
+  /**
+   * Functions for getting data from the API
+   */
   const getAllDataForForm = useCallback(async () => {
     if (selectedForm === "") return
     await axios.get(`/api/formdata/get/${selectedForm}`)
@@ -51,6 +56,9 @@ const MainComponent = () => {
       })
   }, [selectedForm]);
 
+  /**
+   * Handles for changing the template JSON
+   */
   const handleSelectedFormJSONChanged = useCallback(() => {
     if (selectedFormJSON !== "") {
       setTemplateMetadata(selectedFormJSON.templateMetadata);
@@ -62,68 +70,65 @@ const MainComponent = () => {
     }
   }, [selectedFormJSON])
 
-  const handleCreateInputFields = useCallback(() => {
-    if (selectedFormJSON === "") return;
-    const colTD = selectedFormJSON.templateColumnData;
-    let inputFields = { ownerTemplate: ownerTemplate, data: [] };
-    for (let key of colTD) {
-      inputFields.data.push({[key.ColUniqueName]: ""})
-    }
-    setAddDataInputFields(inputFields);
-  }, [selectedFormJSON, ownerTemplate]);
-
-  const handleCreateEditFields = useCallback((id) => {
-    if (selectedFormJSON === "" || id === undefined) return;
-    const dataForId = allDataForForm.filter(i => i.id === parseInt(id))
-    setCurrentEditData(dataForId[0])
-    const colTD = selectedFormJSON.templateColumnData;
-    let inputFieldsForEditing = { id: dataForId[0].id, ownerTemplate: dataForId[0].belongs_to_template, data: [] };
-    let existingKeyArray = []
-    let colUniqueNameKeyArray = []
-    let dataArray = [];
-    for (let entry of columnTemplateData) {
-      colUniqueNameKeyArray.push(entry.ColUniqueName)
-    }
-    for (let key of dataForId[0].data.data) {
-      if (colUniqueNameKeyArray.indexOf(Object.keys(key)[0]) >= 0) {
-        existingKeyArray.push(Object.keys(key)[0])
-        dataArray.push(key);
-      }
-    }
-    let idxCounter = 0;
-    for (let key of colTD) {
-      if (!existingKeyArray.includes(key.ColUniqueName)) {
-        inputFieldsForEditing.data.push({[key.ColUniqueName]: ""})
-      }
-      else {
-        inputFieldsForEditing.data.push({[key.ColUniqueName]: dataArray[idxCounter][key.ColUniqueName]})
-        idxCounter++;
-      }
-    }
-    setEditDataInputFields(inputFieldsForEditing);
-  }, [allDataForForm, columnTemplateData, selectedFormJSON]);
-
   const handleChangeSelectedFormTemplate = (event) => {
     event.preventDefault();
     const selectedFormFileName = event.target.value;
     setSelectedForm(selectedFormFileName)
   };
 
+  /**
+   * Handles for adding new data
+   */
+  const handleCreateInputFields = useCallback(() => {
+    if (selectedFormJSON === "") return;
+    const colTD = selectedFormJSON.templateColumnData;
+    let inputFields = { ownerTemplate: ownerTemplate, data: [] };
+    for (let key of colTD) {
+      switch (key.ColDataType) {
+        case 'TEXT':
+          inputFields.data.push([{[key.ColUniqueName]: getTypeDefault(key.ColDataType)}, {"inputType": key.ColDataType}])
+          break;
+        case 'NUMBER':
+          inputFields.data.push([{[key.ColUniqueName]: getTypeDefault(key.ColDataType)}, {"inputType": key.ColDataType}])
+          break;
+        case 'BOOLEAN':
+          inputFields.data.push([{[key.ColUniqueName]: getTypeDefault(key.ColDataType)}, {"inputType": key.ColDataType}])
+          break;
+        case 'DATE_DMY':
+          inputFields.data.push([{[key.ColUniqueName]: getTypeDefault(key.ColDataType)}, {"inputType": key.ColDataType}])
+          break;
+        case 'PREDEFINED_CHOICE':
+          inputFields.data.push([{[key.ColUniqueName]: getTypeDefault(key.ColDataType)}, {"inputType": key.ColDataType}])
+          break;
+        default:
+          inputFields.data.push([{[key.ColUniqueName]: ""}, {"inputType": "Undetermined"}])
+      }
+    }
+    setAddDataInputFields(inputFields);
+  }, [selectedFormJSON, ownerTemplate]);
+
   const handleChangedAddDataInput = (event, index) => {
-    event.preventDefault();
+    if (event.target.type !== "checkbox") event.preventDefault();
+    let targetValue;
+    if (event.target.type !== "checkbox") targetValue = event.target.value;
+    else targetValue = event.target.checked;
     let workingData = [...addDataInputFields.data];
-    workingData[index][event.target.name] = event.target.value;
+    workingData[index][0][event.target.name] = targetValue;
     let obj = {"ownerTemplate": ownerTemplate, "data": workingData}
     setAddDataInputFields(obj)
   };
 
-  const handleChangedEditDataInput = (event, index) => {
+  const handleAddDataSave = useCallback(async (event) => {
     event.preventDefault();
-    let workingData = [...editDataInputFields.data];
-    workingData[index][event.target.name] = event.target.value;
-    let obj = { "data": workingData}
-    setEditDataInputFields(obj)
-  }
+    let jsonWrapper = {}
+    jsonWrapper.data = addDataInputFields.data
+    await axios.post("/api/formdata/new", {
+      ownerTemplate: addDataInputFields.ownerTemplate,
+      datas: jsonWrapper
+    });
+    if (showAddData) setShowAddData(false)
+    getAllDataForForm();
+  }, [addDataInputFields, showAddData, getAllDataForForm]);
 
   const handleAddDataClicked = (event) => {
     event.preventDefault();
@@ -131,12 +136,80 @@ const MainComponent = () => {
     if (!showAddData && !showEditData) setShowAddData(true);
   };
 
+  const handleAddDataCancel = (event) => {
+    event.preventDefault();
+    handleCreateInputFields();
+    if (showAddData) setShowAddData(false);
+  };
+
+  /**
+   * Handling functions for editing functionality
+   */
+  const handleCreateEditFields = useCallback((id) => {
+    if (selectedFormJSON === "" || id === undefined) return;
+    const dataForId = allDataForForm.filter(i => i.id === parseInt(id));
+    setCurrentEditData(dataForId[0]);
+    const colTD = selectedFormJSON.templateColumnData;
+    let inputFieldsForEditing = { id: dataForId[0].id, ownerTemplate: dataForId[0].belongs_to_template, data: [] };
+    let existingKeyArray = [];
+    let colUniqueNameKeyArray = [];
+    let dataArray = [];
+    for (let entry of columnTemplateData) {
+      colUniqueNameKeyArray.push(entry.ColUniqueName);
+    }
+    for (let key of dataForId[0].data.data) {
+      if (colUniqueNameKeyArray.indexOf(Object.keys(key[0])[0]) >= 0) {
+        existingKeyArray.push(Object.keys(key[0])[0]);
+        dataArray.push(key[0]);
+      }
+    }
+    let idxCounter = 0;
+    for (let key of colTD) {
+      if (!existingKeyArray.includes(key.ColUniqueName)) {
+        inputFieldsForEditing.data.push([{[key.ColUniqueName]: getTypeDefault(key.ColDataType)}, {"inputType": key.ColDataType}])
+      }
+      else {
+        inputFieldsForEditing.data.push([{[key.ColUniqueName]: dataArray[idxCounter][key.ColUniqueName]}, {"inputType": dataArray[idxCounter].inputType}])
+        idxCounter++;
+      }
+    }
+    setEditDataInputFields(inputFieldsForEditing);
+  }, [allDataForForm, columnTemplateData, selectedFormJSON]);
+
+  const handleChangedEditDataInput = (event, index) => {
+    if (event.target.type !== "checkbox") event.preventDefault();
+    let targetValue;
+    if (event.target.type !== "checkbox") targetValue = event.target.value;
+    else targetValue = event.target.checked;
+    let workingData = [...editDataInputFields.data];
+    workingData[index][0][event.target.name] = targetValue;
+    let obj = { "data": workingData}
+    setEditDataInputFields(obj)
+  };
+
+  const handleEditDataSave = useCallback(async (event) => {
+    event.preventDefault();
+    let jsonWrapper = {}
+    jsonWrapper.data = editDataInputFields;
+    await axios.put(`/api/formdata/update/${currentEditData.id}`, { datas: jsonWrapper })
+    if (showEditData) setShowEditData(false);
+    getAllDataForForm();
+  }, [showEditData, editDataInputFields, currentEditData, getAllDataForForm]);
+
   const handleEditDataButtonClicked = (event) => {
     event.preventDefault();
     handleCreateEditFields(event.target.value)
     if (!showAddData && !showEditData) setShowEditData(true);
   };
 
+  const handleEditDataCancel = (event) => {
+    event.preventDefault();
+    if (showEditData) setShowEditData(false);
+  };
+
+  /**
+   * Handling functions for deleting data
+   */
   const handleDeleteDataButtonClicked = (event) => {
     event.preventDefault();
     const deleteId = event.target.value
@@ -155,27 +228,6 @@ const MainComponent = () => {
     }
   };
 
-  const handleAddDataSave = useCallback(async (event) => {
-    event.preventDefault();
-    let jsonWrapper = {}
-    jsonWrapper.data = addDataInputFields.data
-    await axios.post("/api/formdata/new", {
-      ownerTemplate: addDataInputFields.ownerTemplate,
-      datas: jsonWrapper
-    });
-    if (showAddData) setShowAddData(false)
-    getAllDataForForm();
-  }, [addDataInputFields, showAddData, getAllDataForForm]);
-
-  const handleEditDataSave = useCallback(async (event) => {
-    event.preventDefault();
-    let jsonWrapper = {}
-    jsonWrapper.data = editDataInputFields.data;
-    await axios.put(`/api/formdata/update/${currentEditData.id}`, { datas: jsonWrapper })
-    if (showEditData) setShowEditData(false);
-    getAllDataForForm();
-  }, [showEditData, editDataInputFields, currentEditData, getAllDataForForm]);
-
   const handleDeleteConfirm = useCallback(async (deleteId) => {
     await axios.delete(`/api/formdata/delete/${deleteId}`)
       .then((response) => {
@@ -183,21 +235,13 @@ const MainComponent = () => {
       })
   }, [getAllDataForForm]);
 
-  const handleAddDataCancel = (event) => {
-    event.preventDefault();
-    handleCreateInputFields();
-    if (showAddData) setShowAddData(false);
-  };
-
-  const handleEditDataCancel = (event) => {
-    event.preventDefault();
-    if (showEditData) setShowEditData(false);
-  };
-
   const handleDeleteCancel = () => {
     // If something needs to be done
   }
 
+  /**
+   * UseEffects-hooks
+   */
   useEffect(() => {
     getFormTemplateFile();
   }, [getFormTemplateFile]);
@@ -214,6 +258,9 @@ const MainComponent = () => {
     getAllDataForForm();
   }, [getAllDataForForm])
 
+  /**
+   * Rendering of the main component
+   */
   return (
     <div>
       <br />

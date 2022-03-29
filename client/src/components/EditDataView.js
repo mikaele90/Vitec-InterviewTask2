@@ -1,24 +1,73 @@
 import { Fragment } from "react";
 import './EditDataView.css';
 
+import convertType from './component_functions/ConvertInputType';
+
 const EditDataView = ({ show, showAddView, templateData, inputFields, inputChange, save, cancel }) => {
 
-  const editDataCreateEditFields = () => {
-    return (
-      templateData.map((row, index) => {
+  const inputFieldProvider = (templateDataRow, index) => {
+    const uniqueName = templateDataRow.ColUniqueName;
+    const printName = templateDataRow.ColStandaloneDisplayName;
+    const dt = templateDataRow.ColDataType;
+    switch (dt) {
+      case 'TEXT':
+      case 'NUMBER':
+      case 'DATE_DMY':
         return (
-          <Fragment key={`fragmentFor${row.ColUniqueName}`}>
+          <Fragment key={`fragmentFor${uniqueName}`}>
             <br />
-            <label htmlFor={row.ColUniqueName} key={`labelFor${row.ColUniqueName}`}>{`${row.ColStandaloneDisplayName}: `}</label>
+            <label htmlFor={uniqueName} key={`labelFor${uniqueName}`}>{`${printName}: `}</label>
             <input 
-              name={row.ColUniqueName} 
-              id={row.ColUniqueName} 
-              key={row.ColUniqueName}
-              value={inputFields.data[index][row.ColUniqueName]}
+              name={uniqueName}
+              id={uniqueName} 
+              key={uniqueName}
+              type={convertType(dt)}
+              value={inputFields.data[index][0][templateDataRow.ColUniqueName]}
               onChange={event => inputChange(event, index)}
             />
           </Fragment>
         );
+      case 'BOOLEAN':
+        return (
+          <Fragment key={`fragmentFor${uniqueName}`}>
+            <br />
+            <label htmlFor={uniqueName} key={`labelFor${uniqueName}`}>{`${printName}: `}</label>
+            <input 
+              name={uniqueName}
+              id={uniqueName} 
+              key={uniqueName}
+              type="checkbox"
+              checked={inputFields.data[index][0][templateDataRow.ColUniqueName]}
+              onChange={event => inputChange(event, index)}
+            />
+          </Fragment>
+        );
+      case 'PREDEFINED_CHOICE':
+        return (
+          <Fragment key={`fragmentFor${uniqueName}`}>
+            <br />
+            <label htmlFor={uniqueName} key={`labelFor${uniqueName}`}>{`${printName}: `}</label>
+            <select name={uniqueName} defaultValue={"Select department..."} onChange={event => inputChange(event, index)}>
+              <option value={inputFields.data[index][0][templateDataRow.ColUniqueName]} >{inputFields.data[index][0][templateDataRow.ColUniqueName]}</option>
+              {templateDataRow.ColPredefinedChoiceValues.map((entry) => (
+                <option value={entry} key={entry}>{entry}</option>
+              ))}
+            </select>
+          </Fragment>
+        );
+      default:
+        return (
+          <Fragment key={`Undetermined-At-Index-${index}`}>
+            <p name="p-error_input_type">Unable to determine input type.</p>
+          </Fragment>
+        );
+    }
+  }
+
+  const editDataCreateEditFields = () => {
+    return (
+      templateData.map((templateDataRow, index) => {
+        return inputFieldProvider(templateDataRow, index)
       })
     );
   }

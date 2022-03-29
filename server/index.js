@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Postgres client setup
 const { Pool } = require('pg');
+const { Console } = require('console');
 const pgClient = new Pool({
   user: keys.pgUser,
   host: keys.pgHost,
@@ -168,11 +169,12 @@ app.post("/formdata/new", async (req, res) => {
 
 // Update a data entry
 app.put("/formdata/update/:id", async (req, res) => {
-  console.log(`Requesting updating of data entry with id: ${req.params.id}, Logging request body.datas:`);
-  console.log(req.body.datas)
+  console.log(`Requesting updating of data entry with id: ${req.params.id}, Logging request body:`);
+  console.log(req.body)
   if (req.body.datas === undefined) res.send({ working: false });
+  console.log("Saving edits...")
   await pgClient
-    .query("UPDATE dataTable SET data = $1 WHERE id = $2", [req.body.datas, req.params.id])
+    .query("UPDATE dataTable SET data = $1 WHERE id = $2", [req.body.datas.data, req.params.id])
     .then(result => res.send(result))
     .catch(err => console.log("Unable to update!", err))
 });
